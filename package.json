@@ -37,7 +37,8 @@
       "cordova-plugin-advanced-http": {
         "ANDROIDBLACKLISTSECURESOCKETPROTOCOLS": "SSLv3,TLSv1"
       },
-      "cordova-plugin-system": {}
+      "cordova-plugin-system": {},
+      "cordova-plugin-browsersync-gen2": {}
     },
     "platforms": [
       "android"
@@ -68,6 +69,7 @@
     "cordova-plugin-advanced-http": "^3.3.1",
     "cordova-plugin-badge": "^0.8.9",
     "cordova-plugin-browser": "file:src/plugins/browser",
+    "cordova-plugin-browsersync-gen2": "^1.1.7",
     "cordova-plugin-buildinfo": "^4.0.0",
     "cordova-plugin-device": "^2.0.3",
     "cordova-plugin-file": "^7.0.0",
@@ -116,6 +118,11 @@
     "mustache": "^4.2.0",
     "url-parse": "^1.5.10",
     "vanilla-picker": "^2.12.2",
+    "xterm": "^5.3.0",
+    "xterm-addon-fit": "^0.8.0",
+    "xterm-addon-search": "^0.13.0",
+    "xterm-addon-web-links": "^0.9.0",
+    "xterm-addon-webgl": "^0.16.0",
     "yargs": "^17.7.2"
   },
   "browserslist": "cover 100%,not android < 5"

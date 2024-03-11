@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Iterator;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
@@ -145,7 +146,8 @@ public class System extends CordovaPlugin {
               public void run() {
                 ptyExecute(
                   arg1, arg3, args.optJSONArray(1),
-                  args.optBoolean(3), callbackContext
+                  args.optBoolean(3), arg5,
+                  args.optJSONObject(5), callbackContext
                 );
               }
             }
@@ -158,7 +160,8 @@ public class System extends CordovaPlugin {
               public void run() {
                 ptyRunCommand(
                   arg1, arg3, args.optJSONArray(1),
-                  args.optBoolean(3), callbackContext
+                  args.optBoolean(3), arg5,
+                  args.optJSONObject(5), callbackContext
                 );
               }
             }
@@ -277,6 +280,7 @@ public class System extends CordovaPlugin {
   private void ptyExecute(
     String command, String homeDir,
     JSONArray args, Boolean background,
+    String sessionAction, JSONObject extras,
     CallbackContext callback
   ) {
     try {
@@ -297,7 +301,29 @@ public class System extends CordovaPlugin {
 
       intent.putExtra("com.termux.RUN_COMMAND_WORKDIR", homeDir);
       intent.putExtra("com.termux.RUN_COMMAND_BACKGROUND", background);
-      intent.putExtra("com.termux.RUN_COMMAND_SESSION_ACTION", "3");
+      intent.putExtra("com.termux.RUN_COMMAND_SESSION_ACTION", sessionAction);
+
+      Iterator<String> keys = extras.keys();
+      while(keys.hasNext()) {
+        String key = (String) keys.next();
+        Object value = extras.get(key);
+
+        if (value instanceof String) {
+          intent.putExtra(key, (String) value);
+        } else if (value instanceof Integer) {
+          intent.putExtra(key, (Integer) value);
+        } else if (value instanceof Long) {
+          intent.putExtra(key, (Long) value);
+        } else if (value instanceof Double) {
+          intent.putExtra(key, (Double) value);
+        } else if (value instanceof Float) {
+          intent.putExtra(key, (Float) value);
+        } else if (value instanceof Boolean) {
+          intent.putExtra(key, (Boolean) value);
+        } else {
+          intent.putExtra(key, value.toString());
+        }
+      }
 
       context.startService(intent);
 
@@ -310,6 +336,7 @@ public class System extends CordovaPlugin {
   private void ptyRunCommand(
     String command, String homeDir,
     JSONArray commandArgs, Boolean background,
+    String sessionAction, JSONObject extras,
     CallbackContext callback
   ) {
     try {
@@ -330,7 +357,29 @@ public class System extends CordovaPlugin {
 
       intent.putExtra("com.termux.RUN_COMMAND_WORKDIR", homeDir);
       intent.putExtra("com.termux.RUN_COMMAND_BACKGROUND", background);
-      intent.putExtra("com.termux.RUN_COMMAND_SESSION_ACTION", "3");
+      intent.putExtra("com.termux.RUN_COMMAND_SESSION_ACTION", sessionAction);
+
+      Iterator<String> keys = extras.keys();
+      while(keys.hasNext()) {
+        String key = (String) keys.next();
+        Object value = extras.get(key);
+
+        if (value instanceof String) {
+          intent.putExtra(key, (String) value);
+        } else if (value instanceof Integer) {
+          intent.putExtra(key, (Integer) value);
+        } else if (value instanceof Long) {
+          intent.putExtra(key, (Long) value);
+        } else if (value instanceof Double) {
+          intent.putExtra(key, (Double) value);
+        } else if (value instanceof Float) {
+          intent.putExtra(key, (Float) value);
+        } else if (value instanceof Boolean) {
+          intent.putExtra(key, (Boolean) value);
+        } else {
+          intent.putExtra(key, value.toString());
+        }
+      }
 
       // Create the intent for the IntentService class that should be sent the result by TermuxService
       Intent resultIntent = new Intent(

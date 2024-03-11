@@ -136,13 +136,20 @@ export default class Acode {
     this.define('sidebarApps', sidebarAppsModule);
     this.define('createKeyboardEvent', KeyboardEvent);
     this.define('toInternalUrl', helpers.toInternalUri);
-    
+
     this.define("pty", ptyModule);
   }
   
   async initialize() {
     setup();
-    await ptyModule.host.initializeServer();
+    // await ptyModule.host.initializeServer();
+
+    try {
+      let terminal = await import("lib/extensions/terminal");
+      await terminal.default.initialize();
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   /**
