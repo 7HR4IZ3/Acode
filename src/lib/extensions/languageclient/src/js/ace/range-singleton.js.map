@@ -1,0 +1,1 @@
+{"version":3,"file":"range-singleton.js","sourceRoot":"","sources":["../../ace/range-singleton.ts"],"names":[],"mappings":";;;AAEA,MAAa,QAAQ;IAGjB,MAAM,CAAC,cAAc,CAAC,MAAY;QAC9B,IAAI,CAAC,QAAQ,CAAC,SAAS,IAAI,MAAM,EAAE;YAC/B,QAAQ,CAAC,SAAS,GAAG,MAAM,CAAC,iBAAiB,EAAE,CAAC,WAAW,CAAC;SAC/D;QACD,OAAO,QAAQ,CAAC,SAAS,CAAC;IAC9B,CAAC;CACJ;AATD,4BASC"}
