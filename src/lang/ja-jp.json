@@ -374,7 +374,7 @@
   "plugin min version": "'{name}' は Acode - {v-code} 以降でのみ使用できます。こちらをクリックして更新してください。",
   "color preview": "カラープレビュー",
   "confirm": "確認",
-  "list files": "{name} 内のすべてのファイルを一覧表示しますか？ファイル数が多すぎるとアプリがクラッシュする可能性があります。"  
+  "list files": "{name} 内のすべてのファイルを一覧表示しますか？ファイル数が多すぎるとアプリがクラッシュする可能性があります。",
   "problems": "問題",
   "show side buttons": "サイドボタンを表示",
   "verified publisher": "検証済み発行者"

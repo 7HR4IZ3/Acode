@@ -555,7 +555,7 @@ export default class EditorFile {
         return;
       }
       this.#canRun = Promise.resolve(false);
-    } catch (error) {
+    } catch (err) {
       if (err instanceof Error) throw err;
       else throw new Error(err);
     }
@@ -994,6 +994,8 @@ export default class EditorFile {
    */
   #emit(eventName, event) {
     this[`on${eventName}`]?.(event);
+    EditorFile[`on${eventName}`]?.(event);
+
     if (!event.BUBBLING_PHASE) return;
     this.#events[eventName]?.some((fn) => {
       fn(event);

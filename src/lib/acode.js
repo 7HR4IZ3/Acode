@@ -37,6 +37,7 @@ import Contextmenu from 'components/contextmenu';
 import formatterSettings from "settings/formatterSettings";
 import settingsPage from 'components/settingsPage';
 import SideButton from 'components/sideButton';
+import initializeExtensions from "lib/extensions";
 
 import ptyModule, { setup } from "lib/pty";
 
@@ -142,14 +143,7 @@ export default class Acode {
   
   async initialize() {
     setup();
-    // await ptyModule.host.initializeServer();
-
-    try {
-      let terminal = await import("lib/extensions/terminal");
-      await terminal.default.initialize();
-    } catch (err) {
-      console.error(err);
-    }
+    await initializeExtensions();
   }
 
   /**

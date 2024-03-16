@@ -95,7 +95,30 @@
     "tailwindcss": "^3.4.1",
     "webpack": "^5.90.0",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.0.2"
+    "webpack-dev-server": "^5.0.2",
+
+    "xterm": "^5.3.0",
+    "xterm-addon-fit": "^0.8.0",
+    "xterm-addon-search": "^0.13.0",
+    "xterm-addon-web-links": "^0.9.0",
+    "xterm-addon-webgl": "^0.16.0",
+
+    "@xml-tools/ast": "^5.0.5",
+    "@xml-tools/constraints": "^1.1.1",
+    "@xml-tools/parser": "^1.0.11",
+    "@xml-tools/simple-schema": "^3.0.5",
+    "ace-code": "^1.32.3",
+    "vscode-css-languageservice": "^6.2.6",
+    "vscode-html-languageservice": "^5.0.6",
+    "vscode-json-languageservice": "^5.3.5",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-protocol": "^3.17.3",
+    "vscode-languageserver-textdocument": "^1.0.8",
+    "vscode-languageserver-types": "^3.17.3",
+    "vscode-ws-jsonrpc": "^2.0.1",
+    "htmlhint": "^1.1.4",
+    "luaparse": "latest",
+    "showdown": "latest"
   },
   "dependencies": {
     "@deadlyjack/ajax": "^1.2.6",
@@ -118,11 +141,6 @@
     "mustache": "^4.2.0",
     "url-parse": "^1.5.10",
     "vanilla-picker": "^2.12.2",
-    "xterm": "^5.3.0",
-    "xterm-addon-fit": "^0.8.0",
-    "xterm-addon-search": "^0.13.0",
-    "xterm-addon-web-links": "^0.9.0",
-    "xterm-addon-webgl": "^0.16.0",
     "yargs": "^17.7.2"
   },
   "browserslist": "cover 100%,not android < 5"

@@ -174,6 +174,7 @@ const modeList = {
   Turtle: "ttl",
   Twig: "twig|swig",
   Typescript: "ts|typescript|str",
+  Vue: "vue",
   Vala: "vala",
   VBScript: "vbs|vb",
   Velocity: "vm",
@@ -187,6 +188,7 @@ const modeList = {
   Zeek: "zeek|bro",
   Zig: "zig",
   Django: "html",
+  Svelte: "svelte"
 };
 
 const languageNames = {
