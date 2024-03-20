@@ -1,11 +1,9 @@
-/* @tailwind base;
-@tailwind components;
-@tailwind utilities;
- */
 @import "./mixins.scss";
 @import "./keyframes.scss";
 @import "./fileInfo.scss";
 @import "./markdown.scss";
+
+/* @import "./tailwind.scss"; */
 
 :root {
   --scrollbar-width: 4px;
