@@ -1,8 +1,5 @@
-<?xml version='1.0' encoding='utf-8' ?>
-<widget id="com.foxdebug.acode" android-versionCode="944" version="1.10.0"
-    xmlns="http://www.w3.org/ns/widgets"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<?xml version='1.0' encoding='utf-8'?>
+<widget android-versionCode="944" id="com.foxdebug.acodenode" version="1.10.0" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>Acode</name>
     <description>
     Light weight code editor and web IDE for android.
@@ -10,7 +7,7 @@
     <author email="ajit@foxdebug.com" href="https://foxdebug.com">
     Foxdebug
   </author>
-    <content original-src="index.html" src="http://localhost:8100" />
+    <content src="index.html" />
     <access launch-external="yes" origin="*" />
     <allow-navigation href="https://*/*" />
     <allow-navigation href="http://*/*" />
@@ -31,6 +28,8 @@
         <preference name="AndroidLaunchMode" value="singleTask" />
         <preference name="prerendered-icon" value="false" />
         <preference name="androidxEnabled" value="true" />
+        <preference name="android-minSdkVersion" value="22" />
+        <preference name="android-targetSdkVersion" value="33" />
         <preference name="gradleVersion" value="7.6.4" />
         <preference name="buildToolsVersion" value="30.0.3" />
         <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
@@ -65,17 +64,17 @@
                 <data android:scheme="acode" />
             </intent-filter>
         </config-file>
-
-        <config-file target="AndroidManifest.xml" parent="/manifest">
+        <config-file parent="/manifest" target="AndroidManifest.xml">
             <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
             <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
             <uses-permission android:name="android.permission.WRITE_MEDIA_STORAGE" />
             <uses-permission android:name="android.permission.VIBRATE" />
         </config-file>
-
-        <hook type="before_prepare" src="hooks/modify-java-files.js" />
-        <hook type="after_prepare" src="hooks/post-process.js" />
+        <hook src="hooks/modify-java-files.js" type="before_prepare" />
+        <hook src="hooks/post-process.js" type="after_prepare" />
     </platform>
     <allow-navigation href="http://localhost:8100" sessionid="8c75aa3b" />
     <allow-navigation href="http://192.168.206.83:8100" sessionid="1ea30fd9" />
+    <allow-navigation href="http://192.168/23.88:8100" sessionid="a3d8d160" />
+    <allow-navigation href="http://192.168.23.88:8100" sessionid="ac0e08f2" />
 </widget>
