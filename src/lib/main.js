@@ -134,64 +134,57 @@ async function onDeviceReady() {
       console.error("Purchase error:", error);
     }
 
-    try {
-      window.ANDROID_SDK_INT = await new Promise((resolve, reject) =>
-        system.getAndroidVersion(resolve, reject)
-      );
-    } catch (error) {
-      window.ANDROID_SDK_INT = parseInt(device.version);
-    }
-    window.DOES_SUPPORT_THEME = (() => {
-      const $testEl = (
-        <div
-          style={{
-            height: `var(--test-height)`,
-            width: `var(--test-height)`
-          }}
-        ></div>
-      );
-      document.body.append($testEl);
-      const client = $testEl.getBoundingClientRect();
-
-      $testEl.remove();
-
-      if (client.height === 0) return false;
-      else return true;
-    })();
-
-    let acode = window.acode = new Acode();
-
-    system.requestPermission("com.termux.permission.RUN_COMMAND");
-    system.requestPermission("android.permission.WRITE_EXTERNAL_STORAGE");
-
-    const { versionCode } = BuildInfo;
-
-    if (previousVersionCode !== versionCode) {
-      system.clearCache();
-    }
-
-    if (!(await fsOperation(PLUGIN_DIR).exists())) {
-      await fsOperation(DATA_STORAGE).createDirectory("plugins");
-    }
-
-    localStorage.versionCode = versionCode;
-    document.body.setAttribute(
-      "data-version",
-      `v${BuildInfo.version} (${versionCode})`
+  try {
+    window.ANDROID_SDK_INT = await new Promise((resolve, reject) =>
+      system.getAndroidVersion(resolve, reject),
     );
-    acode.setLoadingMessage("Loading settings...");
+  } catch (error) {
+    window.ANDROID_SDK_INT = parseInt(device.version);
+  }
+  window.DOES_SUPPORT_THEME = (() => {
+    const $testEl = <div style={{
+      height: `var(--test-height)`,
+      width: `var(--test-height)`,
+    }}></div>;
+    document.body.append($testEl);
+    const client = $testEl.getBoundingClientRect();
 
-    window.resolveLocalFileSystemURL = function (url, ...args) {
-      oldResolveURL.call(this, Url.safe(url), ...args);
-    };
+    $testEl.remove();
 
-    setTimeout(() => {
-      if (document.body.classList.contains("loading"))
-        document.body.setAttribute(
-          "data-small-msg",
-          "This is taking unexpectedly long time!"
-        );
-    }, 1000 * 10);
+    if (client.height === 0) return false;
+    else return true;
+  })();
+  let acode = window.acode = new Acode();
+
+  system.requestPermission("com.termux.permission.RUN_COMMAND");
+  system.requestPermission('android.permission.READ_EXTERNAL_STORAGE');
+  system.requestPermission('android.permission.WRITE_EXTERNAL_STORAGE');
+
+  const { versionCode } = BuildInfo;
+
+  if (previousVersionCode !== versionCode) {
+    system.clearCache();
+  }
+
+  if (!await fsOperation(PLUGIN_DIR).exists()) {
+    await fsOperation(DATA_STORAGE).createDirectory('plugins');
+  }
+
+  localStorage.versionCode = versionCode;
+  document.body.setAttribute('data-version', `v${BuildInfo.version} (${versionCode})`);
+  acode.setLoadingMessage('Loading settings...');
+
+  window.resolveLocalFileSystemURL = function (url, ...args) {
+    oldResolveURL.call(this, Url.safe(url), ...args);
+  };
+
+  setTimeout(() => {
+    if (document.body.classList.contains('loading'))
+      document.body.setAttribute(
+        'data-small-msg',
+        'This is taking unexpectedly long time!',
+      );
+  }, 1000 * 10);
 
     acode.setLoadingMessage("Loading settings...");
     await settings.init();
