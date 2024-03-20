@@ -8,6 +8,7 @@ import { MarkerGroup } from "./ace/marker_group";
 import { AceRange } from "./ace/range-singleton";
 import { HoverTooltip } from "./ace/hover-tooltip";
 import { getFolderName, getExtension } from "../utils.js";
+
 export class LanguageProvider {
     activeEditor;
     $signatureTooltip;
@@ -235,7 +236,7 @@ export class LanguageProvider {
     }
     $registerCompleters(editor) {
         let completer = {
-            getCompletions: async (editor, session, pos, prefix, callback) => {
+            getCompletions: async (editor, session, _, __, callback) => {
                 this.$getSessionLanguageProvider(session).$sendDeltaQueue(() => {
                     this.doComplete(editor, session, completions => {
                         let fileName = this.$getFileName(session);
@@ -265,7 +266,7 @@ export class LanguageProvider {
                         else if (completion["docMarkdown"]) {
                             item.docHTML = CommonConverter.cleanHtml(this.options.markdownConverter.makeHtml(completion["docMarkdown"]));
                         }
-                        if (editor["completer"]) {
+                        if (editor["completer"]?.completions) {
                             editor["completer"].updateDocTooltip();
                         }
                     });
@@ -441,7 +442,7 @@ class SessionLanguageProvider {
         }
     };
     $applyFormat = (edits) => {
-        for (let edit of edits.reverse()) {
+        for (let edit of edits?.reverse()) {
             this.session.replace(toRange(edit.range), edit.newText);
         }
     };

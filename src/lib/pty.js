@@ -1,5 +1,5 @@
 import alert from "dialogs/alert";
-import helpers from "utils/helpers";
+// import helpers from "utils/helpers";
 import loader from "dialogs/loader";
 import toast from "components/toast";
 import confirm from "dialogs/confirm";
@@ -24,7 +24,7 @@ export function setup() {
     { id: "killTask", title: "Kill Task" }
   ]);
 
-  notification.local.on("killTask", (notification, eopts) => {
+  notification.local.on("killTask", (notification) => {
     let socket = socketToNotify.get(notification.id);
     socket?.close();
   });
