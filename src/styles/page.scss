@@ -392,6 +392,14 @@ wc-page {
 
   main {
     position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .editor {
+      height: auto;
+      flex: auto;
+    }
 
     &:empty {
       position: fixed;

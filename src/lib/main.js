@@ -51,6 +51,7 @@ import { addedFolder } from "lib/openFolder";
 import { keydownState } from "handlers/keyboard";
 import { getEncoding, initEncodings } from "utils/encodings";
 import { setKeyBindings } from "ace/commands";
+import { sideButtonContainer } from "components/sideButton";
 
 const previousVersionCode = parseInt(localStorage.versionCode, 10);
 
@@ -233,7 +234,7 @@ async function loadApp(acode) {
     tail: $menuToggler
   });
   const $main = <main></main>;
-  const $sidebar = <Sidebar container={$main} toggler={$navToggler} />;
+  const $sidebar = Sidebar({ container: $main, toggler: $navToggler });
   const $runBtn = (
     <span
       style={{ fontSize: "1.2em" }}
@@ -241,6 +242,18 @@ async function loadApp(acode) {
       attr-action="run"
       onclick={() => acode.exec("run")}
       oncontextmenu={() => acode.exec("run-file")}
+    ></span>
+  );
+  const $splitBtn = (
+    <span
+      style={{ fontSize: "1.2em" }}
+      className="icon add_circle"
+      attr-action="new-editor"
+      onclick={() => acode.exec("new-editor", [
+        $header, $main.appendChild(
+          <div className="editor"></div>
+        )
+      ])}
     ></span>
   );
   const $floatingNavToggler = (
@@ -258,7 +271,13 @@ async function loadApp(acode) {
   );
   const folders = helpers.parseJSON(localStorage.folders);
   const files = helpers.parseJSON(localStorage.files) || [];
-  const editorManager = await EditorManager($header, $main);
+  $header.insertBefore($splitBtn, $header.lastChild);
+
+  const editorManager = await EditorManager(
+    $header, $main.appendChild(
+      <div className="editor" id="main-editor"></div>
+    ), true
+  );
 
   const setMainMenu = () => {
     if ($mainMenu) {
@@ -290,7 +309,10 @@ async function loadApp(acode) {
 
   acode.$headerToggler = $headerToggler;
   window.actionStack = actionStack.windowCopy();
+
+  acode.editorManager = editorManager;
   window.editorManager = editorManager;
+
   setMainMenu(settings.value.openFileListPos);
   setFileMenu(settings.value.openFileListPos);
   actionStack.onCloseApp = () => acode.exec("save-state");
@@ -308,18 +330,25 @@ async function loadApp(acode) {
   //#region Add event listeners
   initModes();
   quickToolsInit();
+  updateSideButtonContainer();
+
   sidebarApps.init($sidebar);
-  await sidebarApps.loadApps();
+  try { await sidebarApps.loadApps() } catch {}
+
   editorManager.onupdate = onEditorUpdate;
+
   root.on("show", mainPageOnShow);
   app.addEventListener("click", onClickApp);
   editorManager.on("rename-file", onFileUpdate);
   editorManager.on("switch-file", onFileUpdate);
   editorManager.on("file-loaded", onFileUpdate);
   navigator.app.overrideButton("menubutton", true);
+
   system.setIntentHandler(intentHandler, intentHandler.onError);
   system.getCordovaIntent(intentHandler, intentHandler.onError);
+
   setTimeout(showTutorials, 1000);
+
   settings.on("update:openFileListPos", () => {
     setMainMenu();
     setFileMenu();
@@ -328,6 +357,19 @@ async function loadApp(acode) {
     setMainMenu();
     setFileMenu();
   });
+  settings.on('update:showSideButtons', function () {
+    updateSideButtonContainer();
+  });
+
+  function updateSideButtonContainer() {
+    const { showSideButtons } = settings.value;
+    if (!showSideButtons) {
+      sideButtonContainer.remove();
+      return;
+    }
+
+    $main.append(sideButtonContainer);
+  }
 
   $sidebar.onshow = function () {
     const activeFile = editorManager.activeFile;

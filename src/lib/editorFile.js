@@ -144,6 +144,7 @@ export default class EditorFile {
     run: [],
     canrun: [],
   };
+  #editorManager;
 
   onsave;
   onchange;
@@ -164,11 +165,13 @@ export default class EditorFile {
    * @param {string} [filename] name of file.
    * @param {FileOptions} [options]  file create options
    */
-  constructor(filename, options) {
+  constructor(filename, options, editorManager) {
+    this.#editorManager = editorManager || window.editorManager;
+
     const {
       addFile,
       getFile,
-    } = editorManager;
+    } = this.#editorManager;
     let doesExists = null;
 
     // if options are passed
@@ -251,12 +254,16 @@ export default class EditorFile {
     appSettings.on('update:openFileListPos', this.#onFilePosChange);
 
     addFile(this);
-    editorManager.emit('new-file', this);
+    this.#editorManager.emit('new-file', this);
     this.session = ace.createEditSession(options?.text || '');
     this.setMode();
     this.#setupSession();
 
     if (options?.render ?? true) this.render();
+  }
+
+  set editorManager(manager) {
+    this.#editorManager = manager;
   }
 
   /**
@@ -300,8 +307,8 @@ export default class EditorFile {
         this.id = helpers.uuid();
       }
 
-      if (editorManager.activeFile.id === this.id) {
-        editorManager.header.text = value;
+      if (this.#editorManager.activeFile.id === this.id) {
+        this.#editorManager.header.text = value;
       }
 
       // const oldExt = helpers.extname(this.#name);
@@ -312,8 +319,8 @@ export default class EditorFile {
       this.#tab.text = value;
       this.#name = value;
 
-      editorManager.onupdate('rename-file');
-      editorManager.emit('rename-file', this);
+      this.#editorManager.onupdate('rename-file');
+      this.#editorManager.emit('rename-file', this);
 
       if (oldExt !== newExt) this.setMode();
     })();
@@ -376,12 +383,12 @@ export default class EditorFile {
       this.id = value.hashCode();
     }
 
-    editorManager.onupdate('rename-file');
-    editorManager.emit('rename-file', this);
+    this.#editorManager.onupdate('rename-file');
+    this.#editorManager.emit('rename-file', this);
 
     // if this file is active set sub text of header
-    if (editorManager.activeFile.id === this.id) {
-      editorManager.header.subText = this.#getTitle();
+    if (this.#editorManager.activeFile.id === this.id) {
+      this.#editorManager.header.subText = this.#getTitle();
     }
   }
 
@@ -422,9 +429,9 @@ export default class EditorFile {
    */
   set editable(value) {
     if (this.#editable === value) return;
-    editorManager.editor.setReadOnly(!value);
-    editorManager.onupdate('read-only');
-    editorManager.emit('update', 'read-only');
+    this.#editorManager.editor.setReadOnly(!value);
+    this.#editorManager.onupdate('read-only');
+    this.#editorManager.emit('update', 'read-only');
     this.#editable = value;
   }
 
@@ -581,7 +588,7 @@ export default class EditorFile {
    * @param {boolean} force if true, will prompt to save the file
    */
   async remove(force = false) {
-    if (this.id === constants.DEFAULT_FILE_SESSION && !editorManager.files.length) return;
+    if (this.id === constants.DEFAULT_FILE_SESSION && !this.#editorManager.files.length) return;
     if (!force && this.isUnsaved) {
       const confirmation = await confirm(strings.warning.toUpperCase(), strings['unsaved file']);
       if (!confirmation) return;
@@ -589,20 +596,26 @@ export default class EditorFile {
 
     this.#destroy();
 
-    editorManager.files = editorManager.files.filter((file) => file.id !== this.id);
-    const { files, activeFile } = editorManager;
+    this.#editorManager.files = this.#editorManager.files.filter((file) => file.id !== this.id);
+    const { files, activeFile } = this.#editorManager;
     if (activeFile.id === this.id) {
-      editorManager.activeFile = null;
+      this.#editorManager.activeFile = null;
     }
     if (!files.length) {
       Sidebar.hide();
-      editorManager.activeFile = null;
-      new EditorFile();
+      this.#editorManager.activeFile = null;
+      if (this.#editorManager.isMain) {
+        new EditorFile();
+      } else {
+        this.#editorManager.onupdate('remove-file');
+        this.#editorManager.emit('remove-file', this);
+        return this.#editorManager.destroy();
+      }
     } else {
       files[files.length - 1].makeActive();
     }
-    editorManager.onupdate('remove-file');
-    editorManager.emit('remove-file', this);
+    this.#editorManager.onupdate('remove-file');
+    this.#editorManager.emit('remove-file', this);
   }
 
   /**
@@ -654,7 +667,7 @@ export default class EditorFile {
    * Makes this file active
    */
   makeActive() {
-    const { activeFile, editor, switchFile } = editorManager;
+    const { activeFile, editor, switchFile } = this.#editorManager;
 
 
     if (activeFile) {
@@ -677,7 +690,7 @@ export default class EditorFile {
       this.#loadText();
     }
 
-    editorManager.header.subText = this.#getTitle();
+    this.#editorManager.header.subText = this.#getTitle();
 
     this.#emit('focus', createFileEvent(this));
   }
@@ -714,7 +727,7 @@ export default class EditorFile {
     this.makeActive();
 
     if (this.id !== constants.DEFAULT_FILE_SESSION) {
-      const defaultFile = editorManager.getFile(constants.DEFAULT_FILE_SESSION, 'id');
+      const defaultFile = this.#editorManager.getFile(constants.DEFAULT_FILE_SESSION, 'id');
       defaultFile?.remove();
     }
   }
@@ -802,7 +815,7 @@ export default class EditorFile {
       folds,
       editable,
     } = this.#loadOptions;
-    const { editor } = editorManager;
+    const { editor } = this.#editorManager;
 
     this.#loadOptions = null;
 
@@ -838,7 +851,7 @@ export default class EditorFile {
       this.loaded = true;
       this.loading = false;
 
-      const { activeFile, emit } = editorManager;
+      const { activeFile, emit } = this.#editorManager;
       if (activeFile.id === this.id) {
         editor.setReadOnly(false);
       }
@@ -950,7 +963,7 @@ export default class EditorFile {
     this.session.on('changeScrollLeft', EditorFile.#onscrollleft);
     this.session.on('changeFold', EditorFile.#onfold);
     this.session.on('changeAnnotation', () => {
-      editorManager.editor._emit('changeAnnotation', this);
+      this.#editorManager.editor._emit('changeAnnotation', this);
     });
   }
 

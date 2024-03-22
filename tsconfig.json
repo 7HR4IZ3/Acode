@@ -9,7 +9,11 @@
     "removeComments": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "strict": true
+    "strict": true,
+    "baseUrl": "./src",
+    "paths": {
+
+    }
   },
   "exclude": [
     "./dist/**/*",

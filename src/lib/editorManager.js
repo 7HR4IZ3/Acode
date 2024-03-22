@@ -1,27 +1,32 @@
-import list from 'components/collapsableList';
-import ScrollBar from 'components/scrollbar';
-import touchListeners from 'ace/touchHandler';
-import appSettings from './settings';
-import EditorFile from './editorFile';
-import sidebarApps from 'sidebarApps';
-import quickTools from 'components/quickTools';
-import keyboardHandler from 'handlers/keyboard';
-import initColorView from 'ace/colorView';
-import { keydownState } from 'handlers/keyboard';
-import { deactivateColorView } from 'ace/colorView';
-import { scrollAnimationFrame } from 'ace/touchHandler';
-import { setCommands, setKeyBindings } from 'ace/commands';
-import { HARDKEYBOARDHIDDEN_NO, getSystemConfiguration } from './systemConfiguration';
-import SideButton, { sideButtonContainer } from 'components/sideButton';
+import list from "components/collapsableList";
+import ScrollBar from "components/scrollbar";
+import touchListeners from "ace/touchHandler";
+import appSettings from "./settings";
+import EditorFile from "./editorFile";
+import sidebarApps from "sidebarApps";
+import quickTools from "components/quickTools";
+import keyboardHandler from "handlers/keyboard";
+import initColorView from "ace/colorView";
+import { keydownState } from "handlers/keyboard";
+import { deactivateColorView } from "ace/colorView";
+import { scrollAnimationFrame } from "ace/touchHandler";
+import { setCommands, setKeyBindings } from "ace/commands";
+import {
+  HARDKEYBOARDHIDDEN_NO,
+  getSystemConfiguration
+} from "./systemConfiguration";
+import SideButton, { sideButtonContainer } from "components/sideButton";
 
 //TODO: Add option to work multiple files at same time in large display.
 
+let EDITOR_ID = 1;
+
 /**
- *
  * @param {HTMLElement} $header
  * @param {HTMLElement} $body
+ * @param {Booleab} $isMainEditor
  */
-async function EditorManager($header, $body) {
+async function EditorManager($header, $body, $isMainEditor = false) {
   /**
    * @type {Collapsible & HTMLElement}
    */
@@ -38,49 +43,50 @@ async function EditorManager($header, $body) {
 
   const { scrollbarSize } = appSettings.value;
   const events = {
-    'switch-file': [],
-    'rename-file': [],
-    'save-file': [],
-    'file-loaded': [],
-    'file-content-changed': [],
-    'add-folder': [],
-    'remove-folder': [],
-    'update': [],
-    'new-file': [],
-    'remove-file': [],
-    'int-open-file-list': [],
+    "switch-file": [],
+    "rename-file": [],
+    "save-file": [],
+    "file-loaded": [],
+    "file-content-changed": [],
+    "add-folder": [],
+    "remove-folder": [],
+    update: [],
+    "new-file": [],
+    "remove-file": [],
+    "int-open-file-list": [],
     emit(event, ...args) {
       if (!events[event]) return;
-      events[event].forEach((fn) => fn(...args));
+      events[event].forEach(fn => fn(...args));
     }
   };
-  const $container = <div className='editor-container'></div>;
+  const $container = <div className="editor-container"></div>;
   const problemButton = SideButton({
     text: strings.problems,
     icon: "warningreport_problem",
-    backgroundColor: 'var(--danger-color)',
-    textColor: 'var(--danger-text-color)',
+    backgroundColor: "var(--danger-color)",
+    textColor: "var(--danger-text-color)",
     onclick() {
-      acode.exec('open', 'problems');
-    },
+      acode.exec("open", "problems");
+    }
   });
   const editor = ace.edit($container);
   const $vScrollbar = ScrollBar({
     width: scrollbarSize,
     onscroll: onscrollV,
     onscrollend: onscrollVend,
-    parent: $body,
+    parent: $body
   });
   const $hScrollbar = ScrollBar({
     width: scrollbarSize,
     onscroll: onscrollH,
     onscrollend: onscrollHEnd,
     parent: $body,
-    placement: 'bottom',
+    placement: "bottom"
   });
   const manager = {
+    id: EDITOR_ID++,
     files: [],
-    onupdate: () => { },
+    onupdate: () => {},
     activeFile: null,
     addFile,
     editor,
@@ -90,6 +96,7 @@ async function EditorManager($header, $body) {
     getEditorHeight,
     getEditorWidth,
     header: $header,
+    isMain: $isMainEditor,
     container: $container,
     get isScrolling() {
       return isScrolling;
@@ -103,14 +110,14 @@ async function EditorManager($header, $body) {
     },
     on(types, callback) {
       if (!Array.isArray(types)) types = [types];
-      types.forEach((type) => {
+      types.forEach(type => {
         if (!events[type]) events[type] = [];
         events[type].push(callback);
       });
     },
     off(types, callback) {
       if (!Array.isArray(types)) types = [types];
-      types.forEach((type) => {
+      types.forEach(type => {
         if (!events[type]) return;
         events[type] = events[type].filter(c => c !== callback);
       });
@@ -118,7 +125,7 @@ async function EditorManager($header, $body) {
     emit(event, ...args) {
       let detailedEvent;
       let detailedEventArgs = args.slice(1);
-      if (event === 'update') {
+      if (event === "update") {
         const subEvent = args[0];
         if (subEvent) {
           detailedEvent = `${event}:${subEvent}`;
@@ -128,90 +135,108 @@ async function EditorManager($header, $body) {
       if (detailedEvent) {
         events.emit(detailedEvent, ...detailedEventArgs);
       }
+    },
+    destroy() {
+      if ($isMainEditor) return;
+
+      manager.emit("destroy");
+      EditorManager.emit("destroy", manager);
+
+      editor.destroy();
+
+      $openFileList.remove();
+      $container.remove();
+      $body.remove();
+
+      window.editorManager = window.previousEditorManager;
+      window.editorManager?.editor.focus();
     }
   };
 
   // set mode text
-  editor.setSession(ace.createEditSession('', 'ace/mode/text'));
+  editor.setSession(ace.createEditSession("", "ace/mode/text"));
   $body.append($container);
   await setupEditor();
 
-  $hScrollbar.onshow = $vScrollbar.onshow = updateFloatingButton.bind({}, false);
+  $hScrollbar.onshow = $vScrollbar.onshow = updateFloatingButton.bind(
+    {},
+    false
+  );
   $hScrollbar.onhide = $vScrollbar.onhide = updateFloatingButton.bind({}, true);
 
-  appSettings.on('update:textWrap', function (value) {
+  appSettings.on("update:textWrap", function (value) {
     updateMargin();
     for (let file of manager.files) {
       file.session.setUseWrapMode(value);
-      if (!value) file.session.on('changeScrollLeft', onscrollleft);
-      else file.session.off('changeScrollLeft', onscrollleft);
+      if (!value) file.session.on("changeScrollLeft", onscrollleft);
+      else file.session.off("changeScrollLeft", onscrollleft);
     }
   });
 
-  appSettings.on('update:tabSize', function (value) {
-    manager.files.forEach((file) => file.session.setTabSize(value));
+  appSettings.on("update:tabSize", function (value) {
+    manager.files.forEach(file => file.session.setTabSize(value));
   });
 
-  appSettings.on('update:softTab', function (value) {
-    manager.files.forEach((file) => file.session.setUseSoftTabs(value));
+  appSettings.on("update:softTab", function (value) {
+    manager.files.forEach(file => file.session.setUseSoftTabs(value));
   });
 
-  appSettings.on('update:showSpaces', function (value) {
-    editor.setOption('showInvisibles', value);
+  appSettings.on("update:showSpaces", function (value) {
+    editor.setOption("showInvisibles", value);
   });
 
-  appSettings.on('update:fontSize', function (value) {
+  appSettings.on("update:fontSize", function (value) {
     editor.setFontSize(value);
   });
 
-  appSettings.on('update:openFileListPos', function (value) {
+  appSettings.on("update:openFileListPos", function (value) {
     initFileTabContainer();
     $vScrollbar.resize();
   });
 
-  appSettings.on('update:showPrintMargin', function (value) {
-    editorManager.editor.setOption('showPrintMargin', value);
+  appSettings.on("update:showPrintMargin", function (value) {
+    editorManager.editor.setOption("showPrintMargin", value);
   });
 
-  appSettings.on('update:scrollbarSize', function (value) {
+  appSettings.on("update:scrollbarSize", function (value) {
     $vScrollbar.size = value;
     $hScrollbar.size = value;
   });
 
-  appSettings.on('update:liveAutoCompletion', function (value) {
-    editor.setOption('enableLiveAutocompletion', value);
+  appSettings.on("update:liveAutoCompletion", function (value) {
+    editor.setOption("enableLiveAutocompletion", value);
   });
 
-  appSettings.on('update:linenumbers', function (value) {
+  appSettings.on("update:linenumbers", function (value) {
     updateMargin(true);
     editor.resize(true);
   });
 
-  appSettings.on('update:lineHeight', function (value) {
+  appSettings.on("update:lineHeight", function (value) {
     editor.container.style.lineHeight = value;
   });
 
-  appSettings.on('update:relativeLineNumbers', function (value) {
-    editor.setOption('relativeLineNumbers', value);
+  appSettings.on("update:relativeLineNumbers", function (value) {
+    editor.setOption("relativeLineNumbers", value);
   });
 
-  appSettings.on('update:elasticTabstops', function (value) {
-    editor.setOption('useElasticTabstops', value);
+  appSettings.on("update:elasticTabstops", function (value) {
+    editor.setOption("useElasticTabstops", value);
   });
 
-  appSettings.on('update:rtlText', function (value) {
-    editor.setOption('rtlText', value);
+  appSettings.on("update:rtlText", function (value) {
+    editor.setOption("rtlText", value);
   });
 
-  appSettings.on('update:hardWrap', function (value) {
-    editor.setOption('hardWrap', value);
+  appSettings.on("update:hardWrap", function (value) {
+    editor.setOption("hardWrap", value);
   });
 
-  appSettings.on('update:printMargin', function (value) {
-    editor.setOption('printMarginColumn', value);
+  appSettings.on("update:printMargin", function (value) {
+    editor.setOption("printMarginColumn", value);
   });
 
-  appSettings.on('update:colorPreview', function (value) {
+  appSettings.on("update:colorPreview", function (value) {
     if (value) {
       return initColorView(editor, true);
     }
@@ -219,39 +244,44 @@ async function EditorManager($header, $body) {
     deactivateColorView();
   });
 
-  appSettings.on('update:showSideButtons', function () {
+  appSettings.on("update:showSideButtons", function () {
     updateMargin();
-    updateSideButtonContainer();
   });
 
-  appSettings.on('update:showAnnotations', function () {
+  appSettings.on("update:showAnnotations", function () {
     updateMargin(true);
   });
 
+  EditorManager.emit("create", manager);
   return manager;
 
   /**
-   * 
-   * @param {EditorFile} file 
+   *
+   * @param {EditorFile} file
    */
   function addFile(file) {
     if (manager.files.includes(file)) return;
     manager.files.push(file);
     manager.openFileList.append(file.tab);
+    file.editorManager = manager;
     $header.text = file.name;
   }
 
+  function switchManager() {
+    // Store previous editorManager in case of destroying current.
+    if (editorManager !== manager) {
+      window.previousEditorManager = window.editorManager;
+      window.editorManager = manager;
+      EditorManager.emit("switch", manager);
+    }
+  }
+
   async function setupEditor() {
-    const Emmet = ace.require('ace/ext/emmet');
+    const Emmet = ace.require("ace/ext/emmet");
     const textInput = editor.textInput.getElement();
     const settings = appSettings.value;
-    const {
-      leftMargin,
-      textWrap,
-      colorPreview,
-      fontSize,
-      lineHeight,
-    } = appSettings.value;
+    const { leftMargin, textWrap, colorPreview, fontSize, lineHeight } =
+      appSettings.value;
     const scrollMarginTop = 0;
     const scrollMarginLeft = 0;
     const scrollMarginRight = textWrap ? 0 : leftMargin;
@@ -261,10 +291,12 @@ async function EditorManager($header, $body) {
     let autosaveTimeout;
     let scrollTimeout;
 
-    editor.on('focus', async () => {
+    editor.on("focus", async () => {
+      switchManager();
+
       const { activeFile } = manager;
       activeFile.focused = true;
-      keyboardHandler.on('keyboardShow', scrollCursorIntoView);
+      keyboardHandler.on("keyboardShow", scrollCursorIntoView);
 
       if (isScrolling) return;
 
@@ -272,28 +304,33 @@ async function EditorManager($header, $body) {
       $vScrollbar.hide();
     });
 
-    editor.on('blur', async () => {
-      const { hardKeyboardHidden, keyboardHeight } = await getSystemConfiguration();
+    editor.on("blur", async () => {
+      const { hardKeyboardHidden, keyboardHeight } =
+        await getSystemConfiguration();
       const blur = () => {
         const { activeFile } = manager;
         activeFile.focused = false;
         activeFile.focusedBefore = false;
       };
 
-      if (hardKeyboardHidden === HARDKEYBOARDHIDDEN_NO && keyboardHeight < 100) { // external keyboard
+      if (
+        hardKeyboardHidden === HARDKEYBOARDHIDDEN_NO &&
+        keyboardHeight < 100
+      ) {
+        // external keyboard
         blur();
         return;
       }
 
       const onKeyboardHide = () => {
-        keyboardHandler.off('keyboardHide', onKeyboardHide);
+        keyboardHandler.off("keyboardHide", onKeyboardHide);
         blur();
       };
 
-      keyboardHandler.on('keyboardHide', onKeyboardHide);
+      keyboardHandler.on("keyboardHide", onKeyboardHide);
     });
 
-    editor.on('change', (e) => {
+    editor.on("change", e => {
       if (checkTimeout) clearTimeout(checkTimeout);
       if (autosaveTimeout) clearTimeout(autosaveTimeout);
 
@@ -304,14 +341,14 @@ async function EditorManager($header, $body) {
           const changed = await activeFile.isChanged();
           activeFile.isUnsaved = changed;
           activeFile.writeToCache();
-          events.emit('file-content-changed', activeFile);
-          manager.onupdate('file-changed');
-          manager.emit('update', 'file-changed');
+          events.emit("file-content-changed", activeFile);
+          manager.onupdate("file-changed");
+          manager.emit("update", "file-changed");
 
           const { autosave } = appSettings.value;
           if (activeFile.uri && changed && autosave) {
             autosaveTimeout = setTimeout(() => {
-              acode.exec('save', false);
+              acode.exec("save", false);
             }, autosave);
           }
         }
@@ -319,9 +356,9 @@ async function EditorManager($header, $body) {
       }, TIMEOUT_VALUE);
     });
 
-    editor.on('changeAnnotation', toggleProblemButton);
+    editor.on("changeAnnotation", toggleProblemButton);
 
-    editor.on('scroll', () => {
+    editor.on("scroll", () => {
       clearTimeout(scrollTimeout);
       isScrolling = true;
       scrollTimeout = setTimeout(() => {
@@ -329,15 +366,15 @@ async function EditorManager($header, $body) {
       }, 100);
     });
 
-    editor.renderer.on('resize', () => {
+    editor.renderer.on("resize", () => {
       $vScrollbar.resize($vScrollbar.visible);
       $hScrollbar.resize($hScrollbar.visible);
     });
 
-    editor.on('scrolltop', onscrolltop);
-    editor.on('scrollleft', onscrollleft);
-    textInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
+    editor.on("scrolltop", onscrolltop);
+    editor.on("scrollleft", onscrollleft);
+    textInput.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
         keydownState.esc = { value: true, target: textInput };
       }
     });
@@ -354,45 +391,47 @@ async function EditorManager($header, $body) {
     editor.setHighlightSelectedWord(true);
     editor.container.style.lineHeight = lineHeight;
 
-    ace.require('ace/ext/language_tools');
-    editor.setOption('animatedScroll', false);
-    editor.setOption('tooltipFollowsMouse', false);
-    editor.setOption('theme', settings.editorTheme);
-    editor.setOption('showGutter', settings.linenumbers || settings.showAnnotations);
-    editor.setOption('showLineNumbers', settings.linenumbers);
-    editor.setOption('enableEmmet', true);
-    editor.setOption('showInvisibles', settings.showSpaces);
-    editor.setOption('indentedSoftWrap', false);
-    editor.setOption('scrollPastEnd', 0.5);
-    editor.setOption('showPrintMargin', settings.showPrintMargin);
-    editor.setOption('relativeLineNumbers', settings.relativeLineNumbers);
-    editor.setOption('useElasticTabstops', settings.elasticTabstops);
-    editor.setOption('useTextareaForIME', settings.useTextareaForIME);
-    editor.setOption('rtlText', settings.rtlText);
-    editor.setOption('hardWrap', settings.hardWrap);
-    editor.setOption('spellCheck', settings.spellCheck);
-    editor.setOption('printMarginColumn', settings.printMargin);
-    editor.setOption('enableBasicAutocompletion', true);
-    editor.setOption('enableLiveAutocompletion', settings.liveAutoCompletion);
+    ace.require("ace/ext/language_tools");
+    editor.setOption("animatedScroll", false);
+    editor.setOption("tooltipFollowsMouse", false);
+    editor.setOption("theme", settings.editorTheme);
+    editor.setOption(
+      "showGutter",
+      settings.linenumbers || settings.showAnnotations
+    );
+    editor.setOption("showLineNumbers", settings.linenumbers);
+    editor.setOption("enableEmmet", true);
+    editor.setOption("showInvisibles", settings.showSpaces);
+    editor.setOption("indentedSoftWrap", false);
+    editor.setOption("scrollPastEnd", 0.5);
+    editor.setOption("showPrintMargin", settings.showPrintMargin);
+    editor.setOption("relativeLineNumbers", settings.relativeLineNumbers);
+    editor.setOption("useElasticTabstops", settings.elasticTabstops);
+    editor.setOption("useTextareaForIME", settings.useTextareaForIME);
+    editor.setOption("rtlText", settings.rtlText);
+    editor.setOption("hardWrap", settings.hardWrap);
+    editor.setOption("spellCheck", settings.spellCheck);
+    editor.setOption("printMarginColumn", settings.printMargin);
+    editor.setOption("enableBasicAutocompletion", true);
+    editor.setOption("enableLiveAutocompletion", settings.liveAutoCompletion);
     // editor.setOption('enableInlineAutocompletion', settings.inlineAutoCompletion);
 
     updateMargin(true);
-    updateSideButtonContainer();
     editor.renderer.setScrollMargin(
       scrollMarginTop,
       scrollMarginBottom,
       scrollMarginLeft,
-      scrollMarginRight,
+      scrollMarginRight
     );
   }
 
   function scrollCursorIntoView() {
-    keyboardHandler.off('keyboardShow', scrollCursorIntoView);
+    keyboardHandler.off("keyboardShow", scrollCursorIntoView);
     if (isCursorVisible()) return;
     const { teardropSize } = appSettings.value;
     editor.renderer.scrollCursorIntoView();
     editor.renderer.scrollBy(0, teardropSize + 10);
-    editor._emit('scroll-intoview');
+    editor._emit("scroll-intoview");
   }
 
   /**
@@ -405,7 +444,10 @@ async function EditorManager($header, $body) {
     const cursorPos = editor.getCursorPosition();
     const contentTop = container.getBoundingClientRect().top;
     const contentBottom = contentTop + container.clientHeight;
-    const cursorTop = editor.renderer.textToScreenCoordinates(cursorPos.row, cursorPos.column).pageY;
+    const cursorTop = editor.renderer.textToScreenCoordinates(
+      cursorPos.row,
+      cursorPos.column
+    ).pageY;
     const cursorBottom = cursorTop + teardropSize + 10;
     return cursorTop >= contentTop && cursorBottom <= contentBottom;
   }
@@ -421,7 +463,7 @@ async function EditorManager($header, $body) {
     const scroll = editorHeight * value;
 
     session.setScrollTop(scroll);
-    editor._emit('scroll', editor);
+    editor._emit("scroll", editor);
     cancelAnimationFrame(scrollAnimationFrame);
   }
 
@@ -440,7 +482,7 @@ async function EditorManager($header, $body) {
     const scroll = editorWidth * value;
 
     session.setScrollLeft(scroll);
-    editor._emit('scroll', editor);
+    editor._emit("scroll", editor);
     cancelAnimationFrame(scrollAnimationFrame);
   }
 
@@ -463,7 +505,7 @@ async function EditorManager($header, $body) {
 
     lastScrollLeft = scrollLeft;
     $hScrollbar.value = factor;
-    editor._emit('scroll', 'horizontal');
+    editor._emit("scroll", "horizontal");
   }
 
   function onscrollleft() {
@@ -486,7 +528,7 @@ async function EditorManager($header, $body) {
 
     lastScrollTop = scrollTop;
     $vScrollbar.value = factor;
-    editor._emit('scroll', 'vertical');
+    editor._emit("scroll", "vertical");
   }
 
   function onscrolltop() {
@@ -506,24 +548,21 @@ async function EditorManager($header, $body) {
         clearTimeout(timeoutQuicktoolsToggler);
 
         if (appSettings.value.floatingButton) {
-          $toggler.classList.remove('hide');
+          $toggler.classList.remove("hide");
           root.appendOuter($toggler);
         }
 
-        $headerToggler.classList.remove('hide');
+        $headerToggler.classList.remove("hide");
         root.appendOuter($headerToggler);
       }
     } else {
       if (!scrollBarVisibilityCount) {
         if ($toggler.isConnected) {
-          $toggler.classList.add('hide');
-          timeoutQuicktoolsToggler = setTimeout(
-            () => $toggler.remove(),
-            300,
-          );
+          $toggler.classList.add("hide");
+          timeoutQuicktoolsToggler = setTimeout(() => $toggler.remove(), 300);
         }
         if ($headerToggler.isConnected) {
-          $headerToggler.classList.add('hide');
+          $headerToggler.classList.add("hide");
           timeoutHeaderToggler = setTimeout(() => $headerToggler.remove(), 300);
         }
       }
@@ -533,7 +572,7 @@ async function EditorManager($header, $body) {
   }
 
   function toggleProblemButton() {
-    const fileWithProblems = manager.files.find((file) => {
+    const fileWithProblems = manager.files.find(file => {
       const annotations = file.session.getAnnotations();
       return !!annotations.length;
     });
@@ -545,26 +584,12 @@ async function EditorManager($header, $body) {
     }
   }
 
-  function updateSideButtonContainer() {
-    const { showSideButtons } = appSettings.value;
-    if (!showSideButtons) {
-      sideButtonContainer.remove();
-      return;
-    }
-
-    $body.append(sideButtonContainer);
-  }
-
   function updateMargin(updateGutter = false) {
     const { showSideButtons, linenumbers, showAnnotations } = appSettings.value;
     const top = 0;
     const bottom = 0;
     const right = showSideButtons ? 15 : 0;
-    const left = linenumbers
-      ? showAnnotations
-        ? 0
-        : -16
-      : 0;
+    const left = linenumbers ? (showAnnotations ? 0 : -16) : 0;
 
     editor.renderer.setMargin(top, bottom, left, right);
 
@@ -572,7 +597,7 @@ async function EditorManager($header, $body) {
 
     editor.setOptions({
       showGutter: linenumbers || showAnnotations,
-      showLineNumbers: linenumbers,
+      showLineNumbers: linenumbers
     });
   }
 
@@ -582,7 +607,7 @@ async function EditorManager($header, $body) {
 
     const file = manager.getFile(id);
 
-    manager.activeFile?.tab.classList.remove('active');
+    manager.activeFile?.tab.classList.remove("active");
     manager.activeFile = file;
     editor.setSession(file.session);
     $header.text = file.filename;
@@ -597,15 +622,15 @@ async function EditorManager($header, $body) {
 
     editor.setReadOnly(!file.editable || !!file.loading);
 
-    manager.onupdate('switch-file');
-    events.emit('switch-file', file);
+    manager.onupdate("switch-file");
+    events.emit("switch-file", file);
   }
 
   function initFileTabContainer() {
     let $list;
 
     if ($openFileList) {
-      if ($openFileList.classList.contains('collapsible')) {
+      if ($openFileList.classList.contains("collapsible")) {
         $list = Array.from($openFileList.$ul.children);
       } else {
         $list = Array.from($openFileList.children);
@@ -619,26 +644,28 @@ async function EditorManager($header, $body) {
       openFileListPos === appSettings.OPEN_FILE_LIST_POS_HEADER ||
       openFileListPos === appSettings.OPEN_FILE_LIST_POS_BOTTOM
     ) {
-      if (!$openFileList?.classList.contains('open-file-list')) {
-        $openFileList = <ul className='open-file-list'></ul>;
+      if (!$openFileList?.classList.contains("open-file-list")) {
+        $openFileList = <ul className="open-file-list"></ul>;
       }
       if ($list) $openFileList.append(...$list);
 
       if (openFileListPos === appSettings.OPEN_FILE_LIST_POS_BOTTOM) {
-        $container.parentElement.insertAdjacentElement('afterend', $openFileList);
+        $container.insertAdjacentElement("afterend", $openFileList);
       } else {
-        $header.insertAdjacentElement('afterend', $openFileList);
+        $container.insertAdjacentElement("beforebegin", $openFileList);
       }
 
-      root.classList.add('top-bar');
+      root.classList.add("top-bar");
 
       const oldAppend = $openFileList.append;
       $openFileList.append = (...args) => {
         oldAppend.apply($openFileList, args);
       };
     } else {
-      $openFileList = list(strings['active files']);
-      $openFileList.classList.add('file-list');
+      $openFileList = list(
+        strings["active files"] + ` (${manager.id})`
+      );
+      $openFileList.classList.add("file-list");
       if ($list) $openFileList.$ul.append(...$list);
       $openFileList.expand();
 
@@ -647,17 +674,18 @@ async function EditorManager($header, $body) {
         oldAppend.apply($openFileList.$ul, args);
       };
 
-      const files = sidebarApps.get('files');
+      const files = sidebarApps.get("files");
       files.insertBefore($openFileList, files.firstElementChild);
-      root.classList.remove('top-bar');
+      root.classList.remove("top-bar");
     }
 
-    root.setAttribute('open-file-list-pos', openFileListPos);
-    manager.emit('int-open-file-list', openFileListPos);
+    $openFileList.addEventListener("click", () => switchManager());
+    root.setAttribute("open-file-list-pos", openFileListPos);
+    manager.emit("int-open-file-list", openFileListPos);
   }
 
   function hasUnsavedFiles() {
-    const unsavedFiles = manager.files.filter((file) => file.isUnsaved);
+    const unsavedFiles = manager.files.filter(file => file.isUnsaved);
     return unsavedFiles.length;
   }
 
@@ -667,16 +695,16 @@ async function EditorManager($header, $body) {
    * @param {"id"|"name"|"uri"} [type]
    * @returns {File}
    */
-  function getFile(checkFor, type = 'id') {
-    return manager.files.find((file) => {
+  function getFile(checkFor, type = "id") {
+    return manager.files.find(file => {
       switch (type) {
-        case 'id':
+        case "id":
           if (file.id === checkFor) return true;
           return false;
-        case 'name':
+        case "name":
           if (file.filename === checkFor) return true;
           return false;
-        case 'uri':
+        case "uri":
           if (file.uri === checkFor) return true;
           return false;
         default:
@@ -687,25 +715,27 @@ async function EditorManager($header, $body) {
 
   /**
    * Gets the height of the editor
-   * @param {AceAjax.Editor} editor 
-   * @returns 
+   * @param {AceAjax.Editor} editor
+   * @returns
    */
   function getEditorHeight(editor) {
     const { renderer, session } = editor;
     const offset = (renderer.$size.scrollerHeight + renderer.lineHeight) * 0.5;
-    const editorHeight = session.getScreenLength() * renderer.lineHeight - offset;
+    const editorHeight =
+      session.getScreenLength() * renderer.lineHeight - offset;
     return editorHeight;
   }
 
   /**
    * Gets the height of the editor
-   * @param {AceAjax.Editor} editor 
-   * @returns 
+   * @param {AceAjax.Editor} editor
+   * @returns
    */
   function getEditorWidth(editor) {
     const { renderer, session } = editor;
     const offset = renderer.$size.scrollerWidth - renderer.characterWidth;
-    const editorWidth = session.getScreenWidth() * renderer.characterWidth - offset;
+    const editorWidth =
+      session.getScreenWidth() * renderer.characterWidth - offset;
     if (appSettings.value.textWrap) {
       return editorWidth;
     } else {
@@ -713,5 +743,45 @@ async function EditorManager($header, $body) {
     }
   }
 }
+
+const events = {
+  "create": [],
+  "switch": [],
+  "destroy": [],
+
+  emit(event, ...args) {
+    if (!events[event]) return;
+    events[event].forEach(fn => fn(...args));
+  }
+};
+EditorManager.on = (types, callback) => {
+  if (!Array.isArray(types)) types = [types];
+  types.forEach(type => {
+    if (!events[type]) events[type] = [];
+    events[type].push(callback);
+  });
+};
+
+EditorManager.off = (types, callback) => {
+  if (!Array.isArray(types)) types = [types];
+  types.forEach(type => {
+    if (!events[type]) return;
+    events[type] = events[type].filter(c => c !== callback);
+  });
+};
+
+EditorManager.emit = (event, ...args) => {
+  let detailedEvent;
+  if (event === "update") {
+    const subEvent = args[0];
+    if (subEvent) {
+      detailedEvent = `${event}:${subEvent}`;
+    }
+  }
+  events.emit(event, ...args);
+  if (detailedEvent) {
+    events.emit(detailedEvent, ...args.slice(1));
+  }
+};
 
 export default EditorManager;

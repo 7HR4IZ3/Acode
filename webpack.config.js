@@ -1,11 +1,12 @@
-const path = require("path");
 const fs = require("fs");
+const path = require("path");
+const { exec } = require("child_process");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
-// const WWW = path.resolve(
-//   __dirname,
-//   "platforms/android/app/src/main/assets/www"
-// );
+const ANDROID_WWW = path.resolve(
+  __dirname,
+  "platforms/android/app/src/main/assets/www"
+);
 const WWW = path.resolve(__dirname, 'www');
 
 module.exports = (env, options) => {
@@ -83,8 +84,35 @@ module.exports = (env, options) => {
     plugins: [
       new MiniCssExtractPlugin({
         filename: "../../css/build/[name].css"
-      })
-    ]
+      }),
+      {
+        apply: compiler => {
+          compiler.hooks.afterDone.tap("prepare", () => {
+            // run cordova prepare
+            exec(
+              `cordova prepare`, { cwd: path.resolve(__dirname) },
+              (err, stdout, stderr) => {
+                if (err) {
+                  console.error(err);
+                  return;
+                }
+                console.log(stdout, stderr);
+              }
+            );
+          });
+        }
+      }
+    ],
+    devServer: {
+      static: {
+        directory: ANDROID_WWW,
+        watch: true
+      },
+      hot: false,
+      liveReload: true,
+      compress: true,
+      port: 9000,
+    }
   };
 
   return [main];

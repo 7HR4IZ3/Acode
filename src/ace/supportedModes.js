@@ -182,7 +182,6 @@ const modeList = {
   Verilog: "v|vh|sv|svh",
   VHDL: "vhd|vhdl",
   Visualforce: "vfp|component|page",
-  Vue: "vue",
   Wollok: "wlk|wpgm|wtest",
   XML: "xml|rdf|rss|wsdl|xslt|atom|mathml|mml|xul|xbl|xaml",
   XQuery: "xq",

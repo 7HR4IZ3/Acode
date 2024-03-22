@@ -377,5 +377,9 @@
   "list files": "List all files in <strong>{name}</strong>? Too many files may crash the app.",
   "problems": "Problems",
   "show side buttons": "Show side buttons",
-  "verified publisher": "Verified publisher"
+  "verified publisher": "Verified publisher",
+
+  "new workspace": "New workspace",
+  "save workspace": "Save workspace",
+  "close workspace": "Close workspace"
 }

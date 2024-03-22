@@ -2,7 +2,7 @@
  * @typedef {import('html-tag-js/ref')} Ref
  */
 
-import items, { ref } from './items';
+import items from './items';
 import settings from 'lib/settings';
 
 /**

@@ -20,6 +20,7 @@ import browser from 'plugins/browser';
 import appSettings from "lib/settings";
 import colorPicker from 'dialogs/color';
 import EditorFile from "lib/editorFile";
+import EditorManager from "lib/editorManager";
 import openFolder from 'lib/openFolder';
 import encodings from 'utils/encodings';
 import palette from 'components/palette';
@@ -96,6 +97,10 @@ export default class Acode {
       removeHandler: removeIntentHandler,
     };
 
+    window.define("acode", (_, __, mod) => {
+      mod.exports = module;
+    });
+
     this.define('Url', Url);
     this.define('page', Page);
     this.define('Color', Color);
@@ -103,13 +108,14 @@ export default class Acode {
     this.define('toast', toast);
     this.define('alert', alert);
     this.define('select', select);
+    this.define("pty", ptyModule);
     this.define('loader', loader);
     this.define('dialogBox', box);
     this.define('prompt', prompt);
     this.define('intent', intent);
     this.define('fileList', files);
-    this.define('browser', browser);
     this.define('fs', fsOperation);
+    this.define('browser', browser);
     this.define('confirm', confirm);
     this.define('helpers', helpers);
     this.define('palette', palette);
@@ -133,12 +139,11 @@ export default class Acode {
     this.define('windowResize', windowResize);
     this.define('encodings', encodingsModule);
     this.define('themeBuilder', ThemeBuilder);
+    this.define('EditorManager', EditorManager);
     this.define('selectionMenu', selectionMenu);
     this.define('sidebarApps', sidebarAppsModule);
     this.define('createKeyboardEvent', KeyboardEvent);
     this.define('toInternalUrl', helpers.toInternalUri);
-
-    this.define("pty", ptyModule);
   }
   
   async initialize() {
@@ -153,6 +158,10 @@ export default class Acode {
    */
   define(name, module) {
     this.#modules[name.toLowerCase()] = module;
+    window.define(
+      `@acode/${name.toLowerCase()}`,
+      (_, __, mod) => (mod.exports = module)
+    )
   }
 
   require(module) {
