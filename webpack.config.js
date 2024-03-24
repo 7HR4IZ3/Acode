@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { exec } = require("child_process");
+const { execSync } = require("child_process");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const ANDROID_WWW = path.resolve(
@@ -8,6 +8,23 @@ const ANDROID_WWW = path.resolve(
   "platforms/android/app/src/main/assets/www"
 );
 const WWW = path.resolve(__dirname, 'www');
+
+// let timeout, isExecuting;
+// function buildAndroidApp() {
+//   if (timeout) clearTimeout(timeout);
+//   timeout = setTimeout(() => {
+//     execSync(
+//       `cordova prepare`, { cwd: path.resolve(__dirname) },
+//       (err, stdout, stderr) => {
+//         if (err) {
+//           console.error(err);
+//           return;
+//         }
+//         console.log(stdout, stderr);
+//       }
+//     );
+//   }, 1000);
+// }
 
 module.exports = (env, options) => {
   const { mode = "development" } = options;
@@ -85,34 +102,24 @@ module.exports = (env, options) => {
       new MiniCssExtractPlugin({
         filename: "../../css/build/[name].css"
       }),
-      {
-        apply: compiler => {
-          compiler.hooks.afterDone.tap("prepare", () => {
-            // run cordova prepare
-            exec(
-              `cordova prepare`, { cwd: path.resolve(__dirname) },
-              (err, stdout, stderr) => {
-                if (err) {
-                  console.error(err);
-                  return;
-                }
-                console.log(stdout, stderr);
-              }
-            );
-          });
-        }
-      }
+      // {
+      //   apply: compiler => {
+      //     compiler.hooks.afterDone.tap("prepare", () => {
+      //       // run cordova prepare
+      //       buildAndroidApp();
+      //   }
+      // }
     ],
-    devServer: {
-      static: {
-        directory: ANDROID_WWW,
-        watch: true
-      },
-      hot: false,
-      liveReload: true,
-      compress: true,
-      port: 9000,
-    }
+    // devServer: {
+    //   static: {
+    //     directory: ANDROID_WWW,
+    //     watch: true
+    //   },
+    //   hot: false,
+    //   liveReload: true,
+    //   compress: true,
+    //   port: 9000,
+    // }
   };
 
   return [main];

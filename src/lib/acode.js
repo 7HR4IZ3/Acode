@@ -20,25 +20,26 @@ import browser from 'plugins/browser';
 import appSettings from "lib/settings";
 import colorPicker from 'dialogs/color';
 import EditorFile from "lib/editorFile";
-import EditorManager from "lib/editorManager";
 import openFolder from 'lib/openFolder';
 import encodings from 'utils/encodings';
+import ThemeBuilder from 'theme/builder';
 import palette from 'components/palette';
 import actionStack from 'lib/actionStack';
+import fsWrapper from "fileSystem/wrapper";
 import tutorial from 'components/tutorial';
 import FileBrowser from "pages/fileBrowser";
-import ThemeBuilder from 'theme/builder';
-import selectionMenu from "lib/selectionMenu";
 import multiPrompt from 'dialogs/multiPrompt';
+import EditorManager from "lib/editorManager";
+import selectionMenu from "lib/selectionMenu";
+import SideButton from 'components/sideButton';
 import inputhints from 'components/inputhints';
 import KeyboardEvent from 'utils/keyboardEvent';
 import keyboardHandler from 'handlers/keyboard';
 import windowResize from 'handlers/windowResize';
 import Contextmenu from 'components/contextmenu';
-import formatterSettings from "settings/formatterSettings";
-import settingsPage from 'components/settingsPage';
-import SideButton from 'components/sideButton';
 import initializeExtensions from "lib/extensions";
+import settingsPage from 'components/settingsPage';
+import formatterSettings from "settings/formatterSettings";
 
 import ptyModule, { setup } from "lib/pty";
 
@@ -114,7 +115,7 @@ export default class Acode {
     this.define('prompt', prompt);
     this.define('intent', intent);
     this.define('fileList', files);
-    this.define('fs', fsOperation);
+    this.define('fs', fsWrapper); // Changed to fsWrapper
     this.define('browser', browser);
     this.define('confirm', confirm);
     this.define('helpers', helpers);
@@ -134,7 +135,7 @@ export default class Acode {
     this.define('addedfolder', addedFolder);
     this.define('contextMenu', Contextmenu);
     this.define('fileBrowser', FileBrowser);
-    this.define('fsOperation', fsOperation);
+    this.define('fsOperation', fsOperation); // fsOperation still available
     this.define('keyboard', keyboardHandler);
     this.define('windowResize', windowResize);
     this.define('encodings', encodingsModule);
