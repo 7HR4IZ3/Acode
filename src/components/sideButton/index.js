@@ -1,13 +1,25 @@
-import './style.scss';
+import "./style.scss";
 
 /**@type {HTMLDivElement} */
-export const sideButtonContainer = <div className='side-buttons'></div>;
+export const sideButtonContainer = <div className="side-buttons"></div>;
 
-export default function SideButtons({ text, icon, onclick, backgroundColor, textColor }) {
-  const $button = <button className="side-button" onclick={onclick} style={{ backgroundColor, color: textColor }}>
-    <spam className={`icon ${icon}`}></spam>
-    <span>{text}</span>
-  </button>;
+export default function SideButtons({
+  text,
+  icon,
+  onclick,
+  backgroundColor,
+  textColor
+}) {
+  const $button = (
+    <button
+      className="side-button"
+      onclick={onclick}
+      style={{ /* backgroundColor, color: textColor*/ }}
+    >
+      <i className={`icon ${icon}`}></i>
+      <span>{text}</span>
+    </button>
+  );
 
   return {
     show() {
@@ -15,6 +27,6 @@ export default function SideButtons({ text, icon, onclick, backgroundColor, text
     },
     hide() {
       $button.remove();
-    },
+    }
   };
 }

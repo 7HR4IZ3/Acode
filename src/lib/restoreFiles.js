@@ -5,8 +5,18 @@ import EditorFile from './editorFile';
  * @param {import('./editorFile').FileOptions[]} files 
  * @param {(count: number)=>void} callback
  */
-export default async function restoreFiles(files) {
+export default async function restoreFiles(files, create, manager) {
   let rendered = false;
+
+  if (Array.isArray(files[0]?.files)) {
+    for (const subFiles of files) {
+      if (!subFiles.isMain)
+        (manager = await create())
+      manager?.switchTo();
+      await restoreFiles(subFiles.files, null, manager);
+    }
+    return;
+  }
 
   await Promise.all(
     files.map(async (file, i) => {
@@ -18,11 +28,10 @@ export default async function restoreFiles(files) {
 
       const { filename, render = false } = file;
       const options = {
-        ...file,
-        render,
+        ...file, render,
         emitUpdate: false,
       };
-      new EditorFile(filename, options);
+      new EditorFile(filename, options, manager);
     })
   );
 }

@@ -174,26 +174,35 @@ function releaseDrag(e) {
   const $target = document.elementFromPoint(clientX, clientY);
 
   if (
-    $parent.contains($target) // target is in parent
-    && $target !== $tab // target is not the tab
+    // $parent.contains($target) // target is in parent
+    (
+      $target.matches("ul.open-file-list") // target is an open file list header
+      || (
+        $target.matches("li.tile") && true
+        // $target.parentElement.matches("ul.open-file-list")
+      ) // target is a child tab to an open file list header
+    ) && $target !== $tab // target is not the tab
     && !$tab.contains($target) // target is not a child of tab
   ) {
     // get the target tab, if target is a child it will get the parent
-    const $targetTab = $target.closest('.tile');
+    // if dropping on the open file list, append to the end
+    const $targetTab = $target.matches("ul.open-file-list") ?
+      $target.lastChild : $target.closest('.tile');
 
     if ($targetTab) {
       const rect = $targetTab.getBoundingClientRect();
       const midX = rect.left + rect.width / 2;
       const pointerX = tabLeft + tabWidth / 2;
+
       if (midX < pointerX) { // move right
         const $nextSibling = $targetTab.nextElementSibling;
         if ($nextSibling) {
-          $parent.insertBefore($tab, $nextSibling);
+          $nextSibling.before($tab);
         } else {
-          $parent.appendChild($tab);
+          $target.appendChild($tab);
         }
       } else {
-        $parent.insertBefore($tab, $targetTab);
+        $targetTab.before($tab);
       }
       updateFileList($parent);
     }
@@ -259,19 +268,24 @@ function getClientPos(e) {
  * Update the position of the file list
  * @param {HTMLElement} $parent 
  */
-function updateFileList($parent) {
-  const children = [...$parent.children];
-  const newFileList = [];
-  for (let el of children) {
-    for (let file of editorManager.files) {
-      if (file.tab === el) {
-        newFileList.push(file);
-        break;
-      }
-    }
-  }
+function updateFileList() {
+  for (const manager of window.EDITOR_MANAGERS) {
+    const toRemove = new Array();
+    const children = [...manager.openFileList.children];
+    manager.files = new Array();
 
-  editorManager.files = newFileList;
+    if (children.length === 0)
+      return acode.newEditorFile(undefined, undefined, manager);
+
+    children.forEach(tab => {
+      if (tab.file.id === constants.DEFAULT_FILE_SESSION)
+        return toRemove.push(tab.file);
+
+      manager.addFile(tab.file);
+      tab.file.makeActive();
+    });
+    toRemove.forEach(file => file.remove())
+  }
 }
 
 /**

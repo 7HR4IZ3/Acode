@@ -1,76 +1,91 @@
 import Url from "utils/Url";
-import fonts from 'lib/fonts';
-import box from 'dialogs/box';
-import Color from 'utils/color';
-import themes from 'theme/list';
-import files from 'lib/fileList';
-import alert from 'dialogs/alert';
-import Page from 'components/page';
+import fonts from "lib/fonts";
+import box from "dialogs/box";
+import Color from "utils/color";
+import themes from "theme/list";
+import files from "lib/fileList";
+import alert from "dialogs/alert";
+import Page from "components/page";
 import commands from "lib/commands";
 import helpers from "utils/helpers";
 import projects from "lib/projects";
-import prompt from 'dialogs/prompt';
-import select from 'dialogs/select';
-import loader from 'dialogs/loader';
+import prompt from "dialogs/prompt";
+import select from "dialogs/select";
+import loader from "dialogs/loader";
 import fsOperation from "fileSystem";
-import toast from 'components/toast';
-import sidebarApps from 'sidebarApps';
-import confirm from 'dialogs/confirm';
-import browser from 'plugins/browser';
+import toast from "components/toast";
+import sidebarApps from "sidebarApps";
+import confirm from "dialogs/confirm";
+import browser from "plugins/browser";
 import appSettings from "lib/settings";
-import colorPicker from 'dialogs/color';
+import colorPicker from "dialogs/color";
 import EditorFile from "lib/editorFile";
-import openFolder from 'lib/openFolder';
-import encodings from 'utils/encodings';
-import ThemeBuilder from 'theme/builder';
-import palette from 'components/palette';
-import actionStack from 'lib/actionStack';
+import openFolder from "lib/openFolder";
+import encodings from "utils/encodings";
+import ThemeBuilder from "theme/builder";
+import palette from "components/palette";
+import actionStack from "lib/actionStack";
 import fsWrapper from "fileSystem/wrapper";
-import tutorial from 'components/tutorial';
+import tutorial from "components/tutorial";
 import FileBrowser from "pages/fileBrowser";
-import multiPrompt from 'dialogs/multiPrompt';
+import multiPrompt from "dialogs/multiPrompt";
 import EditorManager from "lib/editorManager";
 import selectionMenu from "lib/selectionMenu";
-import SideButton from 'components/sideButton';
-import inputhints from 'components/inputhints';
-import KeyboardEvent from 'utils/keyboardEvent';
-import keyboardHandler from 'handlers/keyboard';
-import windowResize from 'handlers/windowResize';
-import Contextmenu from 'components/contextmenu';
+import SideButton from "components/sideButton";
+import inputhints from "components/inputhints";
+import KeyboardEvent from "utils/keyboardEvent";
+import keyboardHandler from "handlers/keyboard";
+import windowResize from "handlers/windowResize";
+import Contextmenu from "components/contextmenu";
 import initializeExtensions from "lib/extensions";
-import settingsPage from 'components/settingsPage';
+import settingsPage from "components/settingsPage";
 import formatterSettings from "settings/formatterSettings";
 
 import ptyModule, { setup } from "lib/pty";
 
-import { addedFolder } from 'lib/openFolder';
-import { decode, encode } from 'utils/encodings';
-import { addMode, removeMode } from 'ace/modelist';
-import { addIntentHandler, removeIntentHandler } from 'handlers/intent';
+import { addedFolder } from "lib/openFolder";
+import { parse, stringify } from "lossless-json";
+import { decode, encode } from "utils/encodings";
+import { addMode, removeMode } from "ace/modelist";
+import { addIntentHandler, removeIntentHandler } from "handlers/intent";
+import {
+  getClass,
+  ChainProxy,
+  ChainConnection,
+  BaseBridgeServer,
+  BridgeTransporter
+} from "browser-bridge";
 
 export default class Acode {
+  #nodejs = null;
+  #connections = null;
+  #nodejsInitialized = false;
+
   #modules = {};
   #pluginsInit = {};
   #pluginUnmount = {};
-  #formatter = [{
-    id: 'default',
-    name: 'Default',
-    exts: ['*'],
-    format: async () => {
-      const { beautify } = ace.require('ace/ext/beautify');
-      const cursorPos = editorManager.editor.getCursorPosition();
-      beautify(editorManager.editor.session);
-      editorManager.editor.gotoLine(cursorPos.row + 1, cursorPos.column);
+  #formatter = [
+    {
+      id: "default",
+      name: "Default",
+      exts: ["*"],
+      format: async () => {
+        const { beautify } = ace.require("ace/ext/beautify");
+        const cursorPos = editorManager.editor.getCursorPosition();
+        beautify(editorManager.editor.session);
+        editorManager.editor.gotoLine(cursorPos.row + 1, cursorPos.column);
+      }
     }
-  }];
+  ];
 
   constructor() {
+    this.#connections = [];
     const encodingsModule = {
       get encodings() {
         return encodings;
       },
       encode,
-      decode,
+      decode
     };
 
     const themesModule = {
@@ -79,90 +94,152 @@ export default class Acode {
       list: themes.list,
       update: themes.update,
       // Deprecated, not supported anymore
-      apply: () => { },
+      apply: () => {}
     };
 
     const sidebarAppsModule = {
       add: sidebarApps.add,
       get: sidebarApps.get,
-      remove: sidebarApps.remove,
+      remove: sidebarApps.remove
     };
 
     const aceModes = {
       addMode,
-      removeMode,
+      removeMode
     };
 
     const intent = {
       addHandler: addIntentHandler,
-      removeHandler: removeIntentHandler,
+      removeHandler: removeIntentHandler
     };
 
     window.define("acode", (_, __, mod) => {
       mod.exports = module;
     });
 
-    this.define('Url', Url);
-    this.define('page', Page);
-    this.define('Color', Color);
-    this.define('fonts', fonts);
-    this.define('toast', toast);
-    this.define('alert', alert);
-    this.define('select', select);
+    this.#nodejs = window.nodejs;
+    delete window.nodejs;
+
+    const transporter = new BridgeTransporter(this.#nodejs.channel);
+    const server = new BaseBridgeServer({ transporter });
+
+    server.configure({
+      context: window, proxy: ChainProxy,
+      connection: ChainConnection
+    });
+    server.on("connection", (client, connection) => {
+      this.#connections.push({ client, connection });
+
+      let { encoder, decoder } = connection[getClass];
+      this.#nodejs.channel.setStringify(payload => stringify(payload, encoder));
+      this.#nodejs.channel.setParse(data => parse(data, decoder));
+    });
+    server.start();
+
+    this.#nodejs.channel.on("process:stdout", data => {
+      console.log(data);
+    });
+
+    this.#nodejs.channel.on("process:stderr", data => {
+      console.error(data);
+    });
+
+    this.#nodejs.channel.on("process:uncaughtException", data => {
+      console.error(data);
+    });
+
+    this.#nodejs.channel.on("process:warning", data => {
+      console.warn(data);
+    });
+
+    this.#nodejs.start("acode/index.js", err => {
+      if (err) return toast("Error loading nodejs: " + String(err));
+
+      this.#nodejsInitialized = true;
+    }, { redirectOutputToLogcat: true });
+
+    this.define("Url", Url);
+    this.define("page", Page);
+    this.define("Color", Color);
+    this.define("fonts", fonts);
+    this.define("toast", toast);
+    this.define("alert", alert);
+    this.define("select", select);
     this.define("pty", ptyModule);
-    this.define('loader', loader);
-    this.define('dialogBox', box);
-    this.define('prompt', prompt);
-    this.define('intent', intent);
-    this.define('fileList', files);
-    this.define('fs', fsWrapper); // Changed to fsWrapper
-    this.define('browser', browser);
-    this.define('confirm', confirm);
-    this.define('helpers', helpers);
-    this.define('palette', palette);
-    this.define('projects', projects);
-    this.define('tutorial', tutorial);
-    this.define('aceModes', aceModes);
-    this.define('themes', themesModule);
-    this.define('settings', appSettings);
-    this.define('sideButton', SideButton);
-    this.define('EditorFile', EditorFile);
-    this.define('inputhints', inputhints);
-    this.define('openfolder', openFolder);
-    this.define('colorPicker', colorPicker);
-    this.define('actionStack', actionStack);
-    this.define('multiPrompt', multiPrompt);
-    this.define('addedfolder', addedFolder);
-    this.define('contextMenu', Contextmenu);
-    this.define('fileBrowser', FileBrowser);
-    this.define('fsOperation', fsOperation); // fsOperation still available
-    this.define('keyboard', keyboardHandler);
-    this.define('windowResize', windowResize);
-    this.define('encodings', encodingsModule);
-    this.define('themeBuilder', ThemeBuilder);
-    this.define('EditorManager', EditorManager);
-    this.define('selectionMenu', selectionMenu);
-    this.define('sidebarApps', sidebarAppsModule);
-    this.define('createKeyboardEvent', KeyboardEvent);
-    this.define('toInternalUrl', helpers.toInternalUri);
+    this.define("loader", loader);
+    this.define("dialogBox", box);
+    this.define("prompt", prompt);
+    this.define("intent", intent);
+    this.define("fileList", files);
+    this.define("fs", fsWrapper); // Changed to fsWrapper
+    this.define("browser", browser);
+    this.define("confirm", confirm);
+    this.define("helpers", helpers);
+    this.define("palette", palette);
+    this.define("projects", projects);
+    this.define("tutorial", tutorial);
+    this.define("aceModes", aceModes);
+    this.define("themes", themesModule);
+    this.define("settings", appSettings);
+    this.define("sideButton", SideButton);
+    this.define("EditorFile", EditorFile);
+    this.define("inputhints", inputhints);
+    this.define("openfolder", openFolder);
+    this.define("colorPicker", colorPicker);
+    this.define("actionStack", actionStack);
+    this.define("multiPrompt", multiPrompt);
+    this.define("addedfolder", addedFolder);
+    this.define("contextMenu", Contextmenu);
+    this.define("fileBrowser", FileBrowser);
+    this.define("fsOperation", fsOperation); // fsOperation still available
+    this.define("keyboard", keyboardHandler);
+    this.define("windowResize", windowResize);
+    this.define("encodings", encodingsModule);
+    this.define("themeBuilder", ThemeBuilder);
+    this.define("EditorManager", EditorManager);
+    this.define("selectionMenu", selectionMenu);
+    this.define("sidebarApps", sidebarAppsModule);
+    this.define("createKeyboardEvent", KeyboardEvent);
+    this.define("toInternalUrl", helpers.toInternalUri);
   }
-  
+
   async initialize() {
+    await new Promise((resolve, reject) => {
+      if (!this.#nodejsInitialized)
+        return resolve(false);
+      this.#nodejs.channel.once(
+        "server:started", () => resolve(true)
+      );
+      setTimeout(() => {
+        this.#nodejsInitialized = false;
+        console.error("NodeJS took too long to start!!");
+        resolve(false);
+      }, 3000);
+    });
+
     setup();
     await initializeExtensions();
   }
 
+  get nodejs() {
+    if (!this.#nodejsInitialized)
+      throw new Error("NodeJS not initialized");
+    return this.#nodejs;
+  }
+
+  get connections() { return this.#connections }
+
   /**
    * Define a module
-   * @param {string} name 
-   * @param {Object|function} module 
+   * @param {string} name
+   * @param {Object|function} module
    */
   define(name, module) {
     this.#modules[name.toLowerCase()] = module;
     window.define(
       `@acode/${name.toLowerCase()}`,
       (_, __, mod) => (mod.exports = module)
-    )
+    );
   }
 
   require(module) {
@@ -180,25 +257,29 @@ export default class Acode {
   get exitAppMessage() {
     const numFiles = editorManager.hasUnsavedFiles();
     if (numFiles) {
-      return strings['unsaved files close app'];
+      return strings["unsaved files close app"];
     }
   }
 
   setLoadingMessage(message) {
-    document.body.setAttribute('data-small-msg', message);
+    document.body.setAttribute("data-small-msg", message);
   }
 
   /**
    * Sets plugin init function
-   * @param {string} id 
-   * @param {() => void} initFunction 
-   * @param {{list: import('components/settingsPage').ListItem[], cb: (key: string, value: string)=>void}} settings 
+   * @param {string} id
+   * @param {() => void} initFunction
+   * @param {{list: import('components/settingsPage').ListItem[], cb: (key: string, value: string)=>void}} settings
    */
   setPluginInit(id, initFunction, settings) {
     this.#pluginsInit[id] = initFunction;
 
     if (!settings) return;
-    appSettings.uiSettings[`plugin-${id}`] = settingsPage(id, settings.list, settings.cb);
+    appSettings.uiSettings[`plugin-${id}`] = settingsPage(
+      id,
+      settings.list,
+      settings.cb
+    );
   }
 
   setPluginUnmount(id, unmountFunction) {
@@ -206,10 +287,10 @@ export default class Acode {
   }
 
   /**
-   * 
+   *
    * @param {string} id plugin id
    * @param {string} baseUrl local plugin url
-   * @param {HTMLElement} $page 
+   * @param {HTMLElement} $page
    */
   async initPlugin(id, baseUrl, $page, options) {
     if (id in this.#pluginsInit) {
@@ -230,14 +311,14 @@ export default class Acode {
     this.#formatter.unshift({
       id,
       exts: extensions,
-      format,
+      format
     });
   }
 
   unregisterFormatter(id) {
-    this.#formatter = this.#formatter.filter((formatter) => formatter.id !== id);
+    this.#formatter = this.#formatter.filter(formatter => formatter.id !== id);
     const { formatter } = appSettings.value;
-    Object.keys(formatter).forEach((mode) => {
+    Object.keys(formatter).forEach(mode => {
       if (formatter[mode] === id) {
         delete formatter[mode];
       }
@@ -247,7 +328,7 @@ export default class Acode {
 
   async format(selectIfNull = true) {
     const file = editorManager.activeFile;
-    const { getModeForPath } = ace.require('ace/ext/modelist');
+    const { getModeForPath } = ace.require("ace/ext/modelist");
     const { name } = getModeForPath(file.filename);
     const formatterId = appSettings.value.formatter[name];
     const formatter = this.#formatter.find(({ id }) => id === formatterId);
@@ -259,15 +340,15 @@ export default class Acode {
       this.#afterSelectFormatter(name);
       return;
     } else if (!formatter && !selectIfNull) {
-      toast(strings['please select a formatter']);
+      toast(strings["please select a formatter"]);
     }
   }
 
   #afterSelectFormatter(name) {
-    appSettings.on('update:formatter', format);
+    appSettings.on("update:formatter", format);
 
     function format() {
-      appSettings.off('update:formatter', format);
+      appSettings.off("update:formatter", format);
       const id = appSettings.value.formatter[name];
       const formatter = this.#formatter.find(({ id: _id }) => _id === id);
       formatter?.format();
@@ -278,28 +359,26 @@ export default class Acode {
     return fsOperation(file);
   }
 
-  newEditorFile(filename, options) {
-    new EditorFile(filename, options);
+  newEditorFile(filename, options, manager) {
+    new EditorFile(filename, options, manager);
   }
 
   get formatters() {
     return this.#formatter.map(({ id, name, exts }) => ({
-      id,
-      name: name || id,
-      exts,
+      id, name: name || id, exts
     }));
   }
 
   /**
-   * 
-   * @param {string[]} extensions 
+   *
+   * @param {string[]} extensions
    * @returns {Array<[id: String, name: String]>} options
    */
   getFormatterFor(extensions) {
     const options = [[null, strings.none]];
     this.formatters.forEach(({ id, name, exts }) => {
-      const supports = exts.some((ext) => extensions.includes(ext));
-      if (supports || exts.includes('*')) {
+      const supports = exts.some(ext => extensions.includes(ext));
+      if (supports || exts.includes("*")) {
         options.push([id, name]);
       }
     });
@@ -321,7 +400,11 @@ export default class Acode {
   addIcon(className, src) {
     let style = document.head.get(`style[icon="${className}"]`);
     if (!style) {
-      style = <style icon={className}>{`.icon.${className}{background-image: url(${src})}`}</style>;
+      style = (
+        <style
+          icon={className}
+        >{`.icon.${className}{background-image: url(${src})}`}</style>
+      );
       document.head.appendChild(style);
     }
   }

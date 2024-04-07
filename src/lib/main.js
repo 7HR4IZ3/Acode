@@ -135,57 +135,65 @@ async function onDeviceReady() {
       console.error("Purchase error:", error);
     }
 
-  try {
-    window.ANDROID_SDK_INT = await new Promise((resolve, reject) =>
-      system.getAndroidVersion(resolve, reject),
-    );
-  } catch (error) {
-    window.ANDROID_SDK_INT = parseInt(device.version);
-  }
-  window.DOES_SUPPORT_THEME = (() => {
-    const $testEl = <div style={{
-      height: `var(--test-height)`,
-      width: `var(--test-height)`,
-    }}></div>;
-    document.body.append($testEl);
-    const client = $testEl.getBoundingClientRect();
-
-    $testEl.remove();
-
-    if (client.height === 0) return false;
-    else return true;
-  })();
-  let acode = window.acode = new Acode();
-
-  system.requestPermission("com.termux.permission.RUN_COMMAND");
-  system.requestPermission('android.permission.READ_EXTERNAL_STORAGE');
-  system.requestPermission('android.permission.WRITE_EXTERNAL_STORAGE');
-
-  const { versionCode } = BuildInfo;
-
-  if (previousVersionCode !== versionCode) {
-    system.clearCache();
-  }
-
-  if (!await fsOperation(PLUGIN_DIR).exists()) {
-    await fsOperation(DATA_STORAGE).createDirectory('plugins');
-  }
-
-  localStorage.versionCode = versionCode;
-  document.body.setAttribute('data-version', `v${BuildInfo.version} (${versionCode})`);
-  acode.setLoadingMessage('Loading settings...');
-
-  window.resolveLocalFileSystemURL = function (url, ...args) {
-    oldResolveURL.call(this, Url.safe(url), ...args);
-  };
-
-  setTimeout(() => {
-    if (document.body.classList.contains('loading'))
-      document.body.setAttribute(
-        'data-small-msg',
-        'This is taking unexpectedly long time!',
+    try {
+      window.ANDROID_SDK_INT = await new Promise((resolve, reject) =>
+        system.getAndroidVersion(resolve, reject)
       );
-  }, 1000 * 10);
+    } catch (error) {
+      window.ANDROID_SDK_INT = parseInt(device.version);
+    }
+    window.DOES_SUPPORT_THEME = (() => {
+      const $testEl = (
+        <div
+          style={{
+            height: `var(--test-height)`,
+            width: `var(--test-height)`
+          }}
+        ></div>
+      );
+      document.body.append($testEl);
+      const client = $testEl.getBoundingClientRect();
+
+      $testEl.remove();
+
+      if (client.height === 0) return false;
+      else return true;
+    })();
+    let acode = (window.acode = new Acode());
+    window.EDITOR_MANAGERS = acode.editorManagers = new Array();
+
+    system.requestPermission("com.termux.permission.RUN_COMMAND");
+    system.requestPermission("android.permission.READ_EXTERNAL_STORAGE");
+    system.requestPermission("android.permission.WRITE_EXTERNAL_STORAGE");
+
+    const { versionCode } = BuildInfo;
+
+    if (previousVersionCode !== versionCode) {
+      system.clearCache();
+    }
+
+    if (!(await fsOperation(PLUGIN_DIR).exists())) {
+      await fsOperation(DATA_STORAGE).createDirectory("plugins");
+    }
+
+    localStorage.versionCode = versionCode;
+    document.body.setAttribute(
+      "data-version",
+      `v${BuildInfo.version} (${versionCode})`
+    );
+    acode.setLoadingMessage("Loading settings...");
+
+    window.resolveLocalFileSystemURL = function (url, ...args) {
+      oldResolveURL.call(this, Url.safe(url), ...args);
+    };
+
+    setTimeout(() => {
+      if (document.body.classList.contains("loading"))
+        document.body.setAttribute(
+          "data-small-msg",
+          "This is taking unexpectedly long time!"
+        );
+    }, 1000 * 10);
 
     acode.setLoadingMessage("Loading settings...");
     await settings.init();
@@ -249,11 +257,22 @@ async function loadApp(acode) {
       style={{ fontSize: "1.2em" }}
       className="icon add_circle"
       attr-action="new-editor"
-      onclick={() => acode.exec("new-editor", [
-        $header, $main.appendChild(
-          <div className="editor"></div>
-        )
-      ])}
+      onclick={() =>
+        acode.exec("new-editor", [
+          $header,
+          $main.appendChild(<div className="editor"></div>)
+        ])
+      }
+      oncontextmenu={async () => {
+        const { activeFile } = editorManager;
+        const manager = await acode.exec("new-editor", [
+          $header,
+          $main.appendChild(<div className="editor"></div>)
+        ]);
+        editorManager.files.at(-1).makeActive();
+        activeFile.editorManager = manager;
+        activeFile.makeActive();
+      }}
     ></span>
   );
   const $floatingNavToggler = (
@@ -274,10 +293,11 @@ async function loadApp(acode) {
   $header.insertBefore($splitBtn, $header.lastChild);
 
   const editorManager = await EditorManager(
-    $header, $main.appendChild(
-      <div className="editor" id="main-editor"></div>
-    ), true
+    $header,
+    $main.appendChild(<div className="editor" id="main-editor"></div>),
+    true
   );
+  window.EDITOR_MANAGERS.push(editorManager);
 
   const setMainMenu = () => {
     if ($mainMenu) {
@@ -333,7 +353,9 @@ async function loadApp(acode) {
   updateSideButtonContainer();
 
   sidebarApps.init($sidebar);
-  try { await sidebarApps.loadApps() } catch {}
+  try {
+    await sidebarApps.loadApps();
+  } catch {}
 
   editorManager.onupdate = onEditorUpdate;
 
@@ -357,7 +379,7 @@ async function loadApp(acode) {
     setMainMenu();
     setFileMenu();
   });
-  settings.on('update:showSideButtons', function () {
+  settings.on("update:showSideButtons", function () {
     updateSideButtonContainer();
   });
 
@@ -421,6 +443,7 @@ async function loadApp(acode) {
   try {
     await loadPlugins();
   } catch (error) {
+    console.error(error);
     toast("Plugins loading failed!");
   }
 
@@ -434,7 +457,12 @@ async function loadApp(acode) {
 
   if (Array.isArray(files) && files.length) {
     try {
-      await restoreFiles(files);
+      await restoreFiles(files, () =>
+        acode.exec("new-editor", [
+          $header,
+          $main.appendChild(<div className="editor"></div>)
+        ])
+      );
     } catch (error) {
       console.error(error);
       toast("File loading failed!");

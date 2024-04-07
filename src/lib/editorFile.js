@@ -207,6 +207,7 @@ export default class EditorFile {
         },
       }),
     });
+    this.#tab.file = this;
 
     const editable = options?.editable ?? true;
 
@@ -262,8 +263,26 @@ export default class EditorFile {
     if (options?.render ?? true) this.render();
   }
 
+  get editorManager() {
+    return this.#editorManager;
+  }
+
   set editorManager(manager) {
+    if (this.#editorManager === manager) return;
+
+    if (this.#editorManager.activeFile === this) {
+      this.#editorManager.files.at(-1)?.makeActive();
+    }
+
+    this.tab.remove();
+    this.#editorManager.files = this.#editorManager.files.filter(
+      item => item !== this
+    )
+
     this.#editorManager = manager;
+    this.#editorManager.addFile(this);
+    this.#editorManager.openFileList.append(this.tab);
+    this.makeActive();
   }
 
   /**

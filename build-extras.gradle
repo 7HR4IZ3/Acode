@@ -3,3 +3,11 @@ configurations {
       exclude module: 'commons-logging'
   }
 }
+
+android {
+  defaultConfig {
+    ndk {
+      abiFilters "arm64-v8a" // "armeabi-v7a" "x86-64"
+    }
+  }
+}

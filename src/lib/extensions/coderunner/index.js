@@ -1,8 +1,11 @@
 import pty from "lib/pty";
 import Page from "components/page";
-import actionStack from "lib/actionStack";
 import acodeCommands from "lib/commands";
+import actionStack from "lib/actionStack";
 import sideButton from "components/sideButton";
+import settingsPage from "components/settingsPage";
+
+import { addCustomSettings } from "settings/mainSettings";
 
 let Url = acode.require("url");
 let fs = acode.require("fsoperation");
@@ -214,26 +217,26 @@ class CodeRunner {
       actionStack.remove("coderunner");
     };
 
-    if (sideButton) {
-      this.sBtn = sideButton({
-        text: "Outputs",
-        icon: "settings",
-        onclick: () => this.$page.show(),
-        backgroundColor: "#ff4949",
-        textColor: "white"
-      });
-      this.sBtn.show();
-    } else {
-      this.sBtn = tag("span", {
-        className: "icon settings",
-        attr: {
-          action: "run"
-        },
-        onclick: () => this.$page.show()
-      });
-      let header = window.root?.get("header");
-      header?.insertBefore(this.sBtn, header.lastChild);
-    }
+    // if (sideButton) {
+    //   this.sBtn = sideButton({
+    //     text: "Outputs",
+    //     icon: "settings",
+    //     onclick: () => this.$page.show(),
+    //     backgroundColor: "#ff4949",
+    //     textColor: "white"
+    //   });
+    //   this.sBtn.show();
+    // } else {
+    //   this.sBtn = tag("span", {
+    //     className: "icon settings",
+    //     attr: {
+    //       action: "run"
+    //     },
+    //     onclick: () => this.$page.show()
+    //   });
+    //   let header = window.root?.get("header");
+    //   header?.insertBefore(this.sBtn, header.lastChild);
+    // }
 
     this.#commandsUrl = Url.join(DATA_STORAGE, ".commands.json");
     if (!(await fs(this.#commandsUrl).exists())) {
@@ -438,6 +441,15 @@ class CodeRunner {
         exec: () => self.runCode({ name, uri: path })
       };
     });
+    
+    const {list, cb} = this.settingsObj;
+    addCustomSettings(
+      {
+        key: "coderunner-settings",
+        text: strings["coderunner"] || "Code Runner",
+        index: 1, icon: "play_arrow"
+      }, settingsPage("Code Runner", list, cb)
+    )
 
     acode.define("coderunner", {
       getDirectoryForFile,

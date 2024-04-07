@@ -2,6 +2,10 @@ import "styles/lsclient.scss";
 
 import pty from "lib/pty";
 import Page from "components/page";
+import sideButton from "components/sideButton";
+import settingsPage from "components/settingsPage";
+import { addCustomSettings } from "settings/mainSettings";
+
 import {
   ReconnectingWebSocket,
   formatUrl,
@@ -18,6 +22,7 @@ import {
 } from "./ace-linters/type-converters/lsp-converters";
 import { BaseService } from "./ace-linters/services/base-service";
 import { LanguageClient } from "./ace-linters/services/language-client";
+
 
 /**
  * @typedef {object} EditorManager
@@ -141,6 +146,16 @@ export class AcodeLanguageServerPlugin {
 
   async initialize() {
     this.$page = new Page("References");
+    this.$tree = new Page("File Structure");
+
+    this.$treeBtn = sideButton("Structure", "edit", () => {
+      this.$tree.innerHTML = "";
+      this.$tree.appendChild(
+        this.$breadcrumbsNode.cloneNode(true)
+      )
+      this.$tree.show();
+    });
+
     this.$logs = [];
     this.$sockets = {};
     this.$currentSymbols = null;
@@ -330,6 +345,15 @@ export class AcodeLanguageServerPlugin {
     if (this.settings.replaceCompleters) {
       this.$completers = editor.completers.splice(1, 2);
     }
+
+    const {list, cb} = this.settingsObj;
+    addCustomSettings(
+      {
+        key: "languageclient-settings",
+        text: strings["languageclient"] || "Language Client",
+        index: 2, icon: "code"
+      }, settingsPage("Language Client", list, cb)
+    )
 
     let wrap = (mode, callback) => {
       return async (...args) => {

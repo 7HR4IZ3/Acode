@@ -185,25 +185,30 @@ async function expandList($list) {
   try {
     startLoading();
     const entries = await fsOperation(url).lsDir();
-    helpers
-      .sortDir(entries, {
-        sortByName: true,
-        showHiddenFiles: true
-      })
-      .map(entry => {
-        const name = entry.name || Path.basename(entry.url);
-        if (entry.isDirectory) {
-          const $list = createFolderTile(name, entry.url);
-          $ul.appendChild($list);
-
-          if (listState[entry.url]) {
-            $list.expand();
+    await Promise.all(
+      helpers
+        .sortDir(entries, {
+          sortByName: true,
+          showHiddenFiles: true
+        }).map(async (entry) => {
+          const name = entry.name || Path.basename(entry.url);
+          if (entry.isDirectory) {
+            const $list = createFolderTile(name, entry.url);
+            $ul.appendChild($list);
+  
+            if (
+              listState[entry.url] ||
+              (await fsOperation(entry.url)
+                .lsDir()).length == 1
+            ) {
+              $list.expand();
+            }
+          } else {
+            const $item = createFileTile(name, entry.url);
+            $ul.append($item);
           }
-        } else {
-          const $item = createFileTile(name, entry.url);
-          $ul.append($item);
-        }
-      });
+        })
+    );
   } catch (err) {
     $list.collapse();
     helpers.error(err);

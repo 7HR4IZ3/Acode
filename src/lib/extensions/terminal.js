@@ -20,6 +20,8 @@ import { SearchAddon } from "xterm-addon-search";
 import { WebLinksAddon } from "xterm-addon-web-links";
 import { SerializeAddon } from "xterm-addon-serialize";
 
+import { addCustomSettings } from "settings/mainSettings";
+
 const cacheFile = url.join(window.CACHE_STORAGE, "acode.terminal");
 let prevCmd = "bash";
 let ATTRIBUTES = {
@@ -28,7 +30,7 @@ let ATTRIBUTES = {
   underline: 4,
   blink: 5,
   reverse: 7,
-  concealed: 8,
+  concealed: 8
 };
 
 let HIGHLIGHTS = {
@@ -48,7 +50,7 @@ let HIGHLIGHTS = {
   on_light_blue: 104,
   on_light_magenta: 105,
   on_light_cyan: 106,
-  on_white: 107,
+  on_white: 107
 };
 
 let COLORS = {
@@ -68,7 +70,7 @@ let COLORS = {
   light_blue: 94,
   light_magenta: 95,
   light_cyan: 96,
-  white: 97,
+  white: 97
 };
 
 let RESET = "\x1B[0m";
@@ -90,7 +92,7 @@ const FONT_WEIGHT = [
   "600",
   "700",
   "800",
-  "900",
+  "900"
 ];
 const SCROLLBACK = 1000;
 const SCROLL_SENSITIVITY = 200;
@@ -110,7 +112,7 @@ const THEME_LIST = [
   "sapphire",
   "siduckOneDark",
   "snazzy",
-  "xterm",
+  "xterm"
   // "custom",
 ];
 
@@ -134,7 +136,7 @@ const themes = {
     brightBlue: "#57C7FF",
     brightMagenta: "#FF6AC1",
     brightCyan: "#9AEDFE",
-    brightWhite: "#EFF0EB",
+    brightWhite: "#EFF0EB"
   },
   xterm: {
     foreground: "#F8F8F8",
@@ -155,7 +157,7 @@ const themes = {
     cyan: "#5DA5D5",
     brightCyan: "#72F0FF",
     white: "#F8F8F8",
-    brightWhite: "#FFFFFF",
+    brightWhite: "#FFFFFF"
   },
   sapphire: {
     background: "#1c2431",
@@ -176,7 +178,7 @@ const themes = {
     magenta: "#b168df",
     red: "#da6771",
     white: "#efefef",
-    yellow: "#fff099",
+    yellow: "#fff099"
   },
   light: {
     background: "#ffffff",
@@ -199,7 +201,7 @@ const themes = {
     magenta: "#bc05bc",
     red: "#cd3131",
     white: "#555555",
-    yellow: "#949800",
+    yellow: "#949800"
   },
   custom: {
     background: "#1c2431",
@@ -222,7 +224,7 @@ const themes = {
     magenta: "#b168df",
     red: "#da6771",
     white: "#efefef",
-    yellow: "#fff099",
+    yellow: "#fff099"
   },
   ayuDark: {
     background: "#090D13",
@@ -243,7 +245,7 @@ const themes = {
     brightBlue: "#58C1FE",
     brightMagenta: "#FEED98",
     brightCyan: "#94E5CA",
-    brightWhite: "#FEFEFE",
+    brightWhite: "#FEFEFE"
   },
   catppuccin: {
     background: "#1E1D2F",
@@ -264,7 +266,7 @@ const themes = {
     brightBlue: "#96CDFB",
     brightMagenta: "#F5C2E7",
     brightCyan: "#89DCEB",
-    brightWhite: "#D9E0EE",
+    brightWhite: "#D9E0EE"
   },
   oneDark: {
     background: "#1E2127",
@@ -285,7 +287,7 @@ const themes = {
     brightBlue: "#61AFEF",
     brightMagenta: "#C678DD",
     brightCyan: "#56B6C2",
-    brightWhite: "#FFFEFE",
+    brightWhite: "#FFFEFE"
   },
   material: {
     background: "#1E282C",
@@ -306,7 +308,7 @@ const themes = {
     brightBlue: "#7DC6BF",
     brightMagenta: "#6C71C3",
     brightCyan: "#34434D",
-    brightWhite: "#FFFFFF",
+    brightWhite: "#FFFFFF"
   },
   nekonakoDjancoeg: {
     background: "#2a2c3a",
@@ -327,7 +329,7 @@ const themes = {
     brightBlue: "#67d4f2",
     brightMagenta: "#ff8167",
     brightCyan: "#63e0be",
-    brightWhite: "#eeeeee",
+    brightWhite: "#eeeeee"
   },
   dracula: {
     background: "#282a36",
@@ -348,7 +350,7 @@ const themes = {
     brightBlue: "#8be9fd",
     brightMagenta: "#bd93f9",
     brightCyan: "#ff79c6",
-    brightWhite: "#ffffff",
+    brightWhite: "#ffffff"
   },
   ayuMirage: {
     background: "#1F2430",
@@ -369,7 +371,7 @@ const themes = {
     brightBlue: "#58C1FE",
     brightMagenta: "#FEED98",
     brightCyan: "#94E5CA",
-    brightWhite: "#FEFEFE",
+    brightWhite: "#FEFEFE"
   },
   siduckOneDark: {
     background: "#1e222a",
@@ -390,7 +392,7 @@ const themes = {
     brightBlue: "#61afef",
     brightMagenta: "#c678dd",
     brightCyan: "#56b6c2",
-    brightWhite: "#c8ccd4",
+    brightWhite: "#c8ccd4"
   },
   elementary: {
     background: "#101010",
@@ -411,7 +413,7 @@ const themes = {
     brightBlue: "#0071ff",
     brightMagenta: "#ff1d62",
     brightCyan: "#4bb8fd",
-    brightWhite: "#a020f0",
+    brightWhite: "#a020f0"
   },
   ayuLight: {
     background: "#FEFEFE",
@@ -432,7 +434,7 @@ const themes = {
     brightBlue: "#58C1FE",
     brightMagenta: "#FEED98",
     brightCyan: "#94E5CA",
-    brightWhite: "#dacaca",
+    brightWhite: "#dacaca"
   },
   everblush: {
     name: "Everblush",
@@ -454,8 +456,8 @@ const themes = {
     brightBlue: "#71baf2",
     brightMagenta: "#ce89df",
     brightCyan: "#67cbe7",
-    brightWhite: "#bdc3c2",
-  },
+    brightWhite: "#bdc3c2"
+  }
 };
 
 function formatUrl(path) {
@@ -546,7 +548,7 @@ function addScript(config) {
 }
 
 function awaitSetup(script) {
-  return new Promise((r) => {
+  return new Promise(r => {
     script.onload = () => r(script);
     // setTimeout(script.onload, 3000);
   });
@@ -594,7 +596,7 @@ export class TerminalBackend extends EventTarget {
   getState() {
     return {
       name: this.name,
-      termId: this.termId,
+      termId: this.termId
     };
   }
 
@@ -620,7 +622,7 @@ export class AcodeBackend extends TerminalBackend {
 
     this.#commands = {
       cd: {
-        handler: async (data) => {
+        handler: async data => {
           let dir = url?.join(this.#currentDirectory, data || "");
 
           if (await fs(dir).exists()) {
@@ -630,10 +632,10 @@ export class AcodeBackend extends TerminalBackend {
           }
         },
         description: "Change current durectory.",
-        help: ["cd: Go to home directory", "cd <directory>: Go to directory"],
+        help: ["cd: Go to home directory", "cd <directory>: Go to directory"]
       },
       ls: {
-        handler: async (dir) => {
+        handler: async dir => {
           for (let item of await fs(
             this.#currentDirectory,
             dir || ""
@@ -650,11 +652,11 @@ export class AcodeBackend extends TerminalBackend {
         description: "List items in directory.",
         help: [
           "ls: List this directory",
-          "ls <directory>: List content of <directory>",
-        ],
+          "ls <directory>: List content of <directory>"
+        ]
       },
       help: {
-        handler: (cmd) => {
+        handler: cmd => {
           if (cmd) {
             this.term.write("\r\n* " + `'${cmd}'`);
             let command = this.#commands[cmd];
@@ -679,8 +681,8 @@ export class AcodeBackend extends TerminalBackend {
           }
         },
         description: "Display help menu.",
-        help: ["help: Show Help", "help <command>: Show help on command."],
-      },
+        help: ["help: Show Help", "help <command>: Show help on command."]
+      }
     };
   }
 
@@ -696,7 +698,7 @@ export class AcodeBackend extends TerminalBackend {
 
     this.commandHandler = this.runCommand.bind(this);
 
-    term.onData(async (e) => {
+    term.onData(async e => {
       switch (e) {
         case "\u0003": // Ctrl+C
           term.write("^C");
@@ -774,7 +776,7 @@ export class PtyHostBackend extends TerminalBackend {
   constructor({ command, onmessage, plugin } = {}) {
     super();
 
-    this.command = command || plugin.settings.command;
+    this.command = command || plugin?.settings.command;
     this.onmessage = onmessage;
 
     this.$prms = this.init();
@@ -791,9 +793,9 @@ export class PtyHostBackend extends TerminalBackend {
   async init() {
     this.$conn = await pty.host.run({
       command: this.command || "bash",
-      onmessage: (data) => {
+      onmessage: data => {
         this.onmessage?.(data);
-      },
+      }
     });
 
     this.$conn.addEventListener("close", () => {
@@ -807,7 +809,7 @@ export class PtyHostBackend extends TerminalBackend {
             ) +
             "\r\n"
         );
-        this.terminal.term.onData((data) => {
+        this.terminal.term.onData(data => {
           if (this.$conn.state === 3) {
             if (data === "\r") {
               this.terminal.destroy();
@@ -873,7 +875,7 @@ export class WebSocketBackend extends TerminalBackend {
       this.onopen?.bind(this)();
     };
 
-    this.socket.onclose = (ev) => {
+    this.socket.onclose = ev => {
       // console.log(ev);
       if (this.terminal) {
         this.terminal.term.write(
@@ -885,7 +887,7 @@ export class WebSocketBackend extends TerminalBackend {
             ) +
             "\r\n"
         );
-        this.terminal.term.onData((data) => {
+        this.terminal.term.onData(data => {
           if (this.socket.readyState == 3) {
             if (data === "\r") {
               this.terminal.destroy();
@@ -963,9 +965,9 @@ export class WebSocketBackend extends TerminalBackend {
       name: this.name,
       termId: this.termId,
       config: {
-        command: this.command,
+        command: this.command
       },
-      url: this.socket?.url,
+      url: this.socket?.url
     };
   }
 
@@ -975,7 +977,7 @@ export class WebSocketBackend extends TerminalBackend {
       {
         url: state.url,
         restored: true,
-        ...state.config,
+        ...state.config
       },
       state.termId
     );
@@ -1020,7 +1022,7 @@ export class TermuxBackend extends WebSocketBackend {
             (cmd ? "?cmd=" + cmd : "")
           );
         },
-        ...config,
+        ...config
       },
       ...args
     );
@@ -1031,13 +1033,13 @@ export class TermuxBackend extends WebSocketBackend {
       await fetch(this.host + "resize/" + this.termId, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           rows,
-          cols,
+          cols
         }),
-        mode: "no-cors",
+        mode: "no-cors"
       });
     } catch {
       // console.log(e);
@@ -1062,10 +1064,10 @@ export class AcodeXBackend extends WebSocketBackend {
     this.port = String(appSettings.value["bajrangcoder.acodex"]?.port || 8767);
 
     fetch("http://localhost:" + this.port + "/terminals?cols=80&rows=24", {
-      method: "POST",
+      method: "POST"
     })
-      .then((resp) => resp.text())
-      .then((pid) => {
+      .then(resp => resp.text())
+      .then(pid => {
         this.termId = pid;
         this.init("ws://localhost:" + this.port + "/terminals/" + pid);
       });
@@ -1079,7 +1081,7 @@ export class AcodeXBackend extends WebSocketBackend {
           `/terminals/${this.termId}` +
           `/size?rows=${rows}&cols=${cols}`,
         {
-          method: "POST",
+          method: "POST"
         }
       );
     } catch {
@@ -1150,7 +1152,7 @@ export class ExecutorBackend extends WebSocketBackend {
         );
       };
 
-      this.socket.onclose = (ev) => {
+      this.socket.onclose = ev => {
         // console.log(ev.code);
 
         // if (ev.code !== 1000) {
@@ -1174,7 +1176,7 @@ export class ExecutorBackend extends WebSocketBackend {
             "\r\n"
         );
 
-        this.terminal?.term.onData((data) => {
+        this.terminal?.term.onData(data => {
           if (this.socket.readyState == 3) {
             if (data === "\r") {
               this.terminal.destroy();
@@ -1270,7 +1272,7 @@ export class SSHBackend extends ExecutorBackend {
     super(
       {
         command: "ssh",
-        ...config,
+        ...config
       },
       ...args
     );
@@ -1307,7 +1309,7 @@ export class AcodeTerminal {
     backend = null,
     command = null,
     termData = null,
-    plugin = null,
+    plugin = null
   } = {}) {
     this.#termOptions = [];
     this.#termActions = [];
@@ -1323,7 +1325,7 @@ export class AcodeTerminal {
       allowTransparency: true,
       theme: themes.xterm,
 
-      ...config,
+      ...config
     });
     this.command = command;
     this.termData = termData;
@@ -1410,7 +1412,7 @@ export class AcodeTerminal {
     this.#onresize = debounce(this.resize.bind(this), 0);
     window.addEventListener("resize", this.#onresize);
 
-    this.term.onData((data) => {
+    this.term.onData(data => {
       // console.log(data);
       if (this.ctrlPressed && data?.length == 1) {
         this.clearCtrl();
@@ -1434,7 +1436,7 @@ export class AcodeTerminal {
         option[0],
         option[0],
         option[1],
-        ...option.slice(1),
+        ...option.slice(1)
       ]);
       this.#termActions[option[0]] = handler;
     } else {
@@ -1456,7 +1458,7 @@ export class AcodeTerminal {
 
     await this.backend.setup(this);
 
-    this.backend.onmessage = (message) => {
+    this.backend.onmessage = message => {
       this.term.write(message);
     };
   }
@@ -1479,7 +1481,7 @@ export class AcodeTerminal {
     if (this.backend?.resize) {
       this.backend.resize({
         cols: this.term.cols + 2,
-        rows: this.term.rows - 4,
+        rows: this.term.rows - 4
       });
     }
   }
@@ -1507,7 +1509,7 @@ export class AcodeTerminal {
     return {
       name: this.name,
       backend: this.backend?.getState.bind(this.backend)(),
-      termData: this.#serialize.serialize(),
+      termData: this.#serialize.serialize()
     };
   }
 }
@@ -1522,6 +1524,7 @@ class AcodeTerminalPlugin {
   #stateFile;
   #saveInterval;
   #saveTimeout;
+  #settingsPage;
 
   constructor() {
     this.#terms = new Map();
@@ -1536,7 +1539,7 @@ class AcodeTerminalPlugin {
       AcodeXBackend,
       AcodeBackend,
       SSHBackend,
-      ExecutorBackend,
+      ExecutorBackend
       // ProgramExecutor
     ];
   }
@@ -1555,7 +1558,7 @@ class AcodeTerminalPlugin {
     this.page.show = () => {
       actionStack.push({
         id: "acode.terminal",
-        action: this.page.hide,
+        action: this.page.hide
       });
       app.append(this.page);
     };
@@ -1585,29 +1588,29 @@ class AcodeTerminalPlugin {
 
       themes: { ...themes },
 
-      addBackend: (backend) => {
+      addBackend: backend => {
         if (!this.backends.includes(backend)) {
           this.backends.push(backend);
         }
       },
-      removeBackend: (backend) => {
-        this.backends = this.backends.filter((i) => i !== backend);
+      removeBackend: backend => {
+        this.backends = this.backends.filter(i => i !== backend);
       },
 
-      addTerminal: (terminal) => {
+      addTerminal: terminal => {
         if (!this.#terminals.includes(terminal)) {
           this.#terminals.push(terminal);
         }
       },
-      removeTerminal: (terminal) => {
+      removeTerminal: terminal => {
         if (terminal == AcodeTerminal) return;
-        this.#terminals = this.#terminals.filter((i) => i !== terminal);
+        this.#terminals = this.#terminals.filter(i => i !== terminal);
       },
 
       execute(command, { signal = null } = {}) {
         return new Promise((resolve, reject) => {
           let $backend = new ProgramExecutor({ command });
-          $backend.onmessage = (res) => resolve(res);
+          $backend.onmessage = res => resolve(res);
 
           signal?.addEventListener("abort", () => {
             $backend.socket?.close();
@@ -1627,146 +1630,153 @@ class AcodeTerminalPlugin {
       createTerminal: this.createTerminal.bind(this),
 
       formatUrl,
-      color,
+      color
     };
 
     acode.define("terminal", this.exports);
 
-    appSettings.uiSettings[`terminal-settings`] = settingsPage(
-      "Terminal",
-      [
-        {
-          index: 0,
-          key: "theme",
-          text: "Theme",
-          value: settings.theme,
-          info: "Terminal theme",
-          select: THEME_LIST,
-        },
-        {
-          index: 0,
-          key: "command",
-          text: "Shell command",
-          value: settings.command,
-          info: "Shell command for terminal",
-          prompt: "Enter Command",
-          promptType: "text",
-        },
-        {
-          index: 0,
-          key: "backend",
-          text: "Backend",
-          value: settings.backend,
-          info: "Default Terminal backend",
-          select: this.backends.map((i) => i.alias || i.name),
-        },
-        {
-          index: 0,
-          key: "host",
-          text: "Server Host",
-          value: settings.host,
-          info: "Address for the server.",
-          prompt: "Enter address",
-          promptType: "url",
-        },
-        {
-          index: 1,
-          key: "cursorBlink",
-          text: "Cursor Blink",
-          info: "Whether the cursor blinks.",
-          checkbox: !!settings.cursorBlink,
-        },
-        {
-          index: 2,
-          key: "cursorStyle",
-          text: "Cursor Style",
-          value: settings.cursorStyle,
-          info: "The style of the cursor.",
-          select: [CURSOR_STYLE[0], CURSOR_STYLE[1], CURSOR_STYLE[2]],
-        },
-        {
-          index: 3,
-          key: "cursorInactiveStyle",
-          text: "Inactive Cursor Style",
-          value: settings.cursorInactiveStyle,
-          info: "The cursor style of the terminal when not focused.",
-          select: CURSOR_INACTIVE_STYLE,
-        },
-        {
-          index: 4,
-          key: "fontSize",
-          text: "Font Size",
-          value: settings.fontSize,
-          info: "Terminal font size.",
-          prompt: "Font Size",
-          promptType: "number",
-          promptOption: [
-            {
-              match: /^[0-9]+$/,
-              required: true,
-            },
-          ],
-        },
-        {
-          index: 5,
-          key: "fontWeight",
-          text: "Font Weight",
-          value: settings.fontWeight,
-          info: "The font weight used to render text.",
-          select: FONT_SIZE,
-        },
-        // {
-        //   index: 5,
-        //   key: "fontFamily",
-        //   text: "Font Family",
-        //   value: settings.fontFamily,
-        //   info: "The font family used to render text.",
-        //   select: this.fontsList,
-        // },
-        {
-          index: 6,
-          key: "scrollBack",
-          text: "Scroll Back",
-          value: settings.scrollBack,
-          info: "The amount of scrollback in the terminal. Scrollback is the amount of rows that are retained when lines are scrolled beyond the initial viewport.",
-          prompt: "Scroll Back",
-          promptType: "number",
-          promptOption: [
-            {
-              match: /^[0-9]+$/,
-              required: true,
-            },
-          ],
-        },
-        {
-          index: 7,
-          key: "scrollSensitivity",
-          text: "Scroll Sensitivity",
-          value: settings.scrollSensitivity,
-          info: "The scrolling speed multiplier used for adjusting normal scrolling speed.",
-          prompt: "Scroll Sensitivity",
-          promptType: "number",
-          promptOption: [
-            {
-              match: /^[0-9]+$/,
-              required: true,
-            },
-          ],
-        },
-      ],
-      (key, value) => {
-        if (key === "command" || key === "backend") {
-        } else if (key === "host") {
-          value = value.replace("8080", "9001");
-        } else {
-          this.terminals.map((i) => {
-            i.term.options[key] = key == "theme" ? themes[value] : value;
-          });
-        }
+    addCustomSettings(
+      {
+        key: "terminal-settings",
+        text: strings["terminal"] || "Terminal",
+        index: 0, icon: "tune"
+      },
+      (this.#settingsPage = settingsPage(
+        "Terminal",
+        [
+          {
+            index: 0,
+            key: "theme",
+            text: "Theme",
+            value: settings.theme,
+            info: "Terminal theme",
+            select: THEME_LIST
+          },
+          {
+            index: 0,
+            key: "command",
+            text: "Shell command",
+            value: settings.command,
+            info: "Shell command for terminal",
+            prompt: "Enter Command",
+            promptType: "text"
+          },
+          {
+            index: 0,
+            key: "backend",
+            text: "Backend",
+            value: settings.backend,
+            info: "Default Terminal backend",
+            select: this.backends.map(i => i.alias || i.name)
+          },
+          {
+            index: 0,
+            key: "host",
+            text: "Server Host",
+            value: settings.host,
+            info: "Address for the server.",
+            prompt: "Enter address",
+            promptType: "url"
+          },
+          {
+            index: 1,
+            key: "cursorBlink",
+            text: "Cursor Blink",
+            info: "Whether the cursor blinks.",
+            checkbox: !!settings.cursorBlink
+          },
+          {
+            index: 2,
+            key: "cursorStyle",
+            text: "Cursor Style",
+            value: settings.cursorStyle,
+            info: "The style of the cursor.",
+            select: [CURSOR_STYLE[0], CURSOR_STYLE[1], CURSOR_STYLE[2]]
+          },
+          {
+            index: 3,
+            key: "cursorInactiveStyle",
+            text: "Inactive Cursor Style",
+            value: settings.cursorInactiveStyle,
+            info: "The cursor style of the terminal when not focused.",
+            select: CURSOR_INACTIVE_STYLE
+          },
+          {
+            index: 4,
+            key: "fontSize",
+            text: "Font Size",
+            value: settings.fontSize,
+            info: "Terminal font size.",
+            prompt: "Font Size",
+            promptType: "number",
+            promptOption: [
+              {
+                match: /^[0-9]+$/,
+                required: true
+              }
+            ]
+          },
+          {
+            index: 5,
+            key: "fontWeight",
+            text: "Font Weight",
+            value: settings.fontWeight || FONT_WEIGHT[1],
+            info: "The font weight used to render text.",
+            select: FONT_WEIGHT
+          },
+          // {
+          //   index: 5,
+          //   key: "fontFamily",
+          //   text: "Font Family",
+          //   value: settings.fontFamily,
+          //   info: "The font family used to render text.",
+          //   select: this.fontsList,
+          // },
+          {
+            index: 6,
+            key: "scrollBack",
+            text: "Scroll Back",
+            value: settings.scrollBack,
+            info: "The amount of scrollback in the terminal. Scrollback is the amount of rows that are retained when lines are scrolled beyond the initial viewport.",
+            prompt: "Scroll Back",
+            promptType: "number",
+            promptOption: [
+              {
+                match: /^[0-9]+$/,
+                required: true
+              }
+            ]
+          },
+          {
+            index: 7,
+            key: "scrollSensitivity",
+            text: "Scroll Sensitivity",
+            value: settings.scrollSensitivity,
+            info: "The scrolling speed multiplier used for adjusting normal scrolling speed.",
+            prompt: "Scroll Sensitivity",
+            promptType: "number",
+            promptOption: [
+              {
+                match: /^[0-9]+$/,
+                required: true
+              }
+            ]
+          }
+        ],
+        (key, value) => {
+          if (key === "command" || key === "backend") {
+          } else if (key === "host") {
+            value = value.replace("8080", "9001");
+          } else {
+            this.terminals.map(i => {
+              i.term.options[key] = key == "theme" ? themes[value] : value;
+            });
+          }
 
-        this.settings[key] = value;
-        appSettings.update();
-      }
+          this.settings[key] = value;
+          appSettings.update();
+        }
+      ))
     );
   }
 
@@ -1778,16 +1788,16 @@ class AcodeTerminalPlugin {
         icon: "settings",
         onclick: this.#togglePage.bind(this),
         backgroundColor: "#656c76fd",
-        textColor: "white",
+        textColor: "white"
       });
       this.sBtn.show();
     } else {
       this.sBtn = tag("span", {
         className: "icon acode_terminal",
         attr: {
-          action: "run",
+          action: "run"
         },
-        onclick: () => this.page.show(),
+        onclick: () => this.page.show()
       });
       let header = window.root?.get("header");
       header?.insertBefore(this.sBtn, header.lastChild);
@@ -1806,14 +1816,17 @@ class AcodeTerminalPlugin {
       termId = null,
       terminal = AcodeTerminal,
       termData = null,
-      backendConfig = null,
+      backendConfig = null
     } = {}
   ) {
     backend = this.#getBackend(
       backend,
-      { ...(backendConfig || {
-        command: this.settings.command
-      }), plugin: this },
+      {
+        ...(backendConfig || {
+          command: this.settings.command
+        }),
+        plugin: this
+      },
       termId
     );
     // if (!backend) throw new Error("No or invalid backend specified.");
@@ -1836,8 +1849,8 @@ class AcodeTerminalPlugin {
         fontSize: this.settings.fontSize,
         // fontFamily: this.settings.fontFamily,
         fontWeight: this.settings.fontWeight,
-        theme: themes[this.settings.theme],
-      },
+        theme: themes[this.settings.theme]
+      }
     });
 
     container && instance.setup(container);
@@ -1851,41 +1864,41 @@ class AcodeTerminalPlugin {
 
   #setupUi() {
     this.#ui.tabContent = tag("div", {
-      className: "col-12 tab-content",
+      className: "col-12 tab-content"
     });
 
     this.#ui.leftBar = tag("div", {
       className: "col-1 tabs-left-bar",
-      children: [],
+      children: []
     });
 
     this.#ui.tabsContainer = tag("div", {
-      className: "row col-10 nav nav-tabs tabs-container",
+      className: "row col-10 nav nav-tabs tabs-container"
     });
 
     this.#ui.rightBar = tag("div", {
       className: "col-12 d-flex flex-row tabs-right-bar",
-      children: this.#createUiRightBar(),
+      children: this.#createUiRightBar()
     });
 
     this.#ui.tabHeader = tag("div", {
       className: "row tab-headers",
       children: [
         // this.#ui.leftBar,
-        this.#ui.tabsContainer,
+        this.#ui.tabsContainer
         // this.#ui.rightBar,
-      ],
+      ]
     });
 
     this.#ui.quicktools = tag("div", {
       id: "quicktools",
       className: "col-12",
-      children: this.#quickTools(),
+      children: this.#quickTools()
     });
 
     this.#ui.tabs = tag("div", {
       className: "tabs",
-      children: [this.#ui.tabHeader, this.#ui.tabContent, this.#ui.quicktools],
+      children: [this.#ui.tabHeader, this.#ui.tabContent, this.#ui.quicktools]
     });
 
     this.main.appendChild(this.#ui.tabs);
@@ -1903,7 +1916,7 @@ class AcodeTerminalPlugin {
       children: [
         tag("div", {
           className: "col-9 tab-header",
-          textContent: "Terminal",
+          textContent: "Terminal"
         }),
         // tag("button", {
         //   className: "col btn btn-sm btn-danger close-tab",
@@ -1911,8 +1924,8 @@ class AcodeTerminalPlugin {
         // }),
         tag("span", {
           className: "term-number",
-          textContent: termNum,
-        }),
+          textContent: termNum
+        })
       ],
       onclick: ({ target }) => {
         if (target.classList.contains("close-tab")) {
@@ -1920,12 +1933,12 @@ class AcodeTerminalPlugin {
         } else {
           this.#setActiveTab(tab);
         }
-      },
+      }
     });
 
     const menu = contextmenu({
       top: 100,
-      left: 100,
+      left: 100
       // toggler: true,
       // onshow: () => console.log("Show"),
       // onhide: () => console.log("Hide"),
@@ -1940,7 +1953,7 @@ class AcodeTerminalPlugin {
     tab.setAttribute("term-num", termNum);
 
     term = await this.createTerminal(tabBody, termConfig);
-    term.term.onTitleChange((title) => {
+    term.term.onTitleChange(title => {
       tab.querySelector(".tab-header").innerText = title;
     });
     term.ondestroy = () => {
@@ -1956,7 +1969,7 @@ class AcodeTerminalPlugin {
       tabBody.remove();
       tab.remove();
 
-      this.terminals = this.terminals.filter((t) => t !== term);
+      this.terminals = this.terminals.filter(t => t !== term);
       this.saveTerminals();
     };
 
@@ -1975,7 +1988,7 @@ class AcodeTerminalPlugin {
     );
     term.menu = menu;
     // Show the context menu
-    tabBody.oncontextmenu = (ev) => {
+    tabBody.oncontextmenu = ev => {
       ev.preventDefault();
       menu.show();
       term.term.focus();
@@ -2006,7 +2019,7 @@ class AcodeTerminalPlugin {
               acode.toast("Text copied.");
             });
             term.focus();
-          },
+          }
         }),
         // tag("span", {
         //   className: "col icon cut",
@@ -2017,10 +2030,10 @@ class AcodeTerminalPlugin {
             let { term } = this.#activeTerm;
             cordova.plugins.clipboard.paste(text => {
               term.paste(text);
-            })
-          },
-        }),
-      ],
+            });
+          }
+        })
+      ]
     }));
   }
 
@@ -2028,11 +2041,11 @@ class AcodeTerminalPlugin {
     let tabId = tab.getAttribute("tab-id");
     let tabBody = this.#ui.tabContent.querySelector("#" + tabId);
 
-    Array.from(document.querySelectorAll(".tab.active")).map((tab) =>
+    Array.from(document.querySelectorAll(".tab.active")).map(tab =>
       tab.classList.remove("active")
     );
 
-    Array.from(document.querySelectorAll(".tab-body.show")).map((tab) =>
+    Array.from(document.querySelectorAll(".tab-body.show")).map(tab =>
       tab.classList.remove("show")
     );
 
@@ -2060,7 +2073,7 @@ class AcodeTerminalPlugin {
   }
 
   async #saveTerminals() {
-    let terms = this.terminals.map((term) => term.getState());
+    let terms = this.terminals.map(term => term.getState());
     if (terms == this.#termState) return;
     this.#termState = terms;
     // console.log(terms);
@@ -2092,7 +2105,7 @@ class AcodeTerminalPlugin {
             terminal,
             backend,
 
-            termData: item.termData,
+            termData: item.termData
           },
           false
         );
@@ -2103,7 +2116,7 @@ class AcodeTerminalPlugin {
   #createUiRightBar() {
     this.#ui.addTabBtn = tag("span", {
       className: "col-5 icon add",
-      onclick: () => this.newTerminal(),
+      onclick: () => this.newTerminal()
     });
     return [
       tag("div", {
@@ -2115,26 +2128,26 @@ class AcodeTerminalPlugin {
             onclick: async () => {
               let backend = await acode.select(
                 "Select Backend",
-                this.backends.map((backend) => [
+                this.backends.map(backend => [
                   backend.alias,
                   backend.alias,
-                  backend.icon,
+                  backend.icon
                 ])
               );
               if (backend) {
                 this.defaultBackend = backend;
                 this.newTerminal({ backend });
               }
-            },
-          }),
-        ],
+            }
+          })
+        ]
       }),
       // this.#ui.profileSelect,
       tag("span", {
         className: "col icon delete",
         onclick: () => {
           this.#activeTerm?.destroy();
-        },
+        }
       }),
       tag("span", {
         className: "col icon more_vert",
@@ -2145,7 +2158,9 @@ class AcodeTerminalPlugin {
             ["new", "Create Terminal", "add"],
             ["clear", "Clear Terminal", "clearclose"],
             ["close", "Close Terminal", "delete"],
-            ...(this.#activeTerm ? this.#activeTerm.termOptions : []),
+
+            ["settings", "Terminal Settings", "settings"],
+            ...(this.#activeTerm ? this.#activeTerm.termOptions : [])
           ]);
           switch (action) {
             case "new":
@@ -2164,14 +2179,16 @@ class AcodeTerminalPlugin {
               cd = formatUrl(cd);
               this.#activeTerm?.execute(`cd "${cd}"`);
               break;
+            case "settings":
+              this.#settingsPage?.show();
             default:
               let actions = this.#activeTerm?.termActions;
               if (actions && (action = actions[action])) {
                 await action();
               }
           }
-        },
-      }),
+        }
+      })
     ];
   }
 
@@ -2193,14 +2210,14 @@ class AcodeTerminalPlugin {
               self.#activeTerm.clearCtrl();
               this.style.color = "unset";
             }
-          },
+          }
         },
         { icon: "keyboard_tab", text: "\t" },
         { text: "/" },
         { text: "home" },
         { icon: "keyboard_arrow_up", text: "\u001b[A" },
         { text: "end" },
-        { text: "pgup" },
+        { text: "pgup" }
       ],
       [
         {
@@ -2211,7 +2228,7 @@ class AcodeTerminalPlugin {
             let cd = url.dirname(uri);
             cd = formatUrl(cd);
             this.#activeTerm.execute(`cd "${cd}"`);
-          },
+          }
         },
         { text: "esc" },
         {
@@ -2224,13 +2241,13 @@ class AcodeTerminalPlugin {
               self.#activeTerm.clearAlt();
               this.style.color = "unset";
             }
-          },
+          }
         },
         { icon: "keyboard_arrow_left", text: "\u001b[D" },
         { icon: "keyboard_arrow_down", text: "\u001b[B" },
         { icon: "keyboard_arrow_right", text: "\u001b[C" },
-        { text: "pgdn" },
-      ],
+        { text: "pgdn" }
+      ]
     ];
 
     let textToCmd = {
@@ -2238,10 +2255,10 @@ class AcodeTerminalPlugin {
       home: "\x1b[H",
       end: "\x1b[F",
       pgup: "\u001b[1S",
-      pgdn: "\u001b[1T",
+      pgdn: "\u001b[1T"
     };
 
-    let main = (items) =>
+    let main = items =>
       items.map(({ icon, onclick, text, write }) => {
         let extra = {};
         if (text && !icon) {
@@ -2282,19 +2299,19 @@ class AcodeTerminalPlugin {
           ontouchend() {
             held = false;
           },
-          ...extra,
+          ...extra
         });
       });
 
     return [
       tag("div", {
         className: "quicktools-div",
-        children: main(tools[0]),
+        children: main(tools[0])
       }),
       tag("div", {
         className: "quicktools-div",
-        children: main(tools[1]),
-      }),
+        children: main(tools[1])
+      })
     ];
   }
 
@@ -2306,7 +2323,7 @@ class AcodeTerminalPlugin {
 
     if (typeof backend == "string") {
       backend = this.backends.find(
-        (i) => i.alias == backend || i.name == backend
+        i => i.alias == backend || i.name == backend
       );
       backend = new backend(...args);
     }
@@ -2316,7 +2333,7 @@ class AcodeTerminalPlugin {
   #getTerminal(terminal) {
     if (typeof terminal == "string") {
       return this.#terminals.find(
-        (i) => i.alias == terminal || i.name == terminal
+        i => i.alias == terminal || i.name == terminal
       );
     }
     return terminal;
@@ -2338,7 +2355,7 @@ class AcodeTerminalPlugin {
 
       if (key === "v") {
         // ctrl+v: paste whatever is in the clipboard
-        clipboard.paste((text) => {
+        clipboard.paste(text => {
           term.paste(text);
         });
         return false;
@@ -2395,7 +2412,7 @@ class AcodeTerminalPlugin {
 
   destroy() {
     sideButton ? this.sBtn?.hide() : this.sBtn.remove();
-    this.tags.map((i) => i.remove());
+    this.tags.map(i => i.remove());
   }
 
   get settings() {
@@ -2411,12 +2428,12 @@ class AcodeTerminalPlugin {
 
       cursorBlink: true,
       fontSize: FONT_SIZE,
-      fontWeight: FONT_WEIGHT[0],
+      fontWeight: FONT_WEIGHT[1],
       // fontFamily: null,
       scrollBack: SCROLLBACK,
       scrollSensitivity: SCROLL_SENSITIVITY,
       cursorStyle: CURSOR_STYLE[0],
-      cursorInactiveStyle: CURSOR_INACTIVE_STYLE[0],
+      cursorInactiveStyle: CURSOR_INACTIVE_STYLE[0]
     };
   }
 }

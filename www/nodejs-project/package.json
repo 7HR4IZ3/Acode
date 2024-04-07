@@ -9,6 +9,9 @@
   "author": "Thraize",
   "license": "MIT",
   "dependencies": {
-    "npm": "^10.5.0"
+    "http-server": "^14.1.1",
+    "live-server": "^1.1.0",
+    "lossless-json": "^4.0.1",
+    "ws": "^8.16.0"
   }
 }

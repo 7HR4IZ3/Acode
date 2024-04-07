@@ -20,6 +20,7 @@ import SideButton, { sideButtonContainer } from "components/sideButton";
 //TODO: Add option to work multiple files at same time in large display.
 
 let EDITOR_ID = 1;
+let problemButton;
 
 /**
  * @param {HTMLElement} $header
@@ -60,27 +61,18 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     }
   };
   const $container = <div className="editor-container"></div>;
-  const problemButton = SideButton({
-    text: strings.problems,
-    icon: "warningreport_problem",
-    backgroundColor: "var(--danger-color)",
-    textColor: "var(--danger-text-color)",
-    onclick() {
-      acode.exec("open", "problems");
-    }
-  });
   const editor = ace.edit($container);
   const $vScrollbar = ScrollBar({
     width: scrollbarSize,
     onscroll: onscrollV,
     onscrollend: onscrollVend,
-    parent: $body
+    parent: $container
   });
   const $hScrollbar = ScrollBar({
     width: scrollbarSize,
     onscroll: onscrollH,
     onscrollend: onscrollHEnd,
-    parent: $body,
+    parent: $container,
     placement: "bottom"
   });
   const manager = {
@@ -88,16 +80,14 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     files: [],
     onupdate: () => {},
     activeFile: null,
-    addFile,
-    editor,
-    getFile,
-    switchFile,
-    hasUnsavedFiles,
+    addFile, editor, getFile,
+    switchFile, hasUnsavedFiles,
     getEditorHeight,
     getEditorWidth,
     header: $header,
     isMain: $isMainEditor,
     container: $container,
+    switchTo: () => switchManager(),
     get isScrolling() {
       return isScrolling;
     },
@@ -139,6 +129,10 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     destroy() {
       if ($isMainEditor) return;
 
+      window.EDITOR_MANAGERS = window.EDITOR_MANAGERS.filter(
+        item => item !== manager
+      );
+
       manager.emit("destroy");
       EditorManager.emit("destroy", manager);
 
@@ -148,10 +142,19 @@ async function EditorManager($header, $body, $isMainEditor = false) {
       $container.remove();
       $body.remove();
 
-      window.editorManager = window.previousEditorManager;
-      window.editorManager?.editor.focus();
+      console.log(window.editorManager, manager)
+
+      window.editorManager = window.EDITOR_MANAGERS[0];
+      window.editorManager.switchTo();
     }
   };
+  problemButton = SideButton({
+    text: strings.problems,
+    icon: "warningreport_problem",
+    backgroundColor: "var(--danger-color)",
+    textColor: "var(--danger-text-color)",
+    onclick() { acode.exec("open", "problems") }
+  });
 
   // set mode text
   editor.setSession(ace.createEditSession("", "ace/mode/text"));
@@ -272,6 +275,7 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     if (editorManager !== manager) {
       window.previousEditorManager = window.editorManager;
       window.editorManager = manager;
+      window.editorManager.switchTo();
       EditorManager.emit("switch", manager);
     }
   }
@@ -445,8 +449,7 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     const contentTop = container.getBoundingClientRect().top;
     const contentBottom = contentTop + container.clientHeight;
     const cursorTop = editor.renderer.textToScreenCoordinates(
-      cursorPos.row,
-      cursorPos.column
+      cursorPos.row, cursorPos.column
     ).pageY;
     const cursorBottom = cursorTop + teardropSize + 10;
     return cursorTop >= contentTop && cursorBottom <= contentBottom;
@@ -662,9 +665,7 @@ async function EditorManager($header, $body, $isMainEditor = false) {
         oldAppend.apply($openFileList, args);
       };
     } else {
-      $openFileList = list(
-        strings["active files"] + ` (${manager.id})`
-      );
+      $openFileList = list(strings["active files"] + ` (${manager.id})`);
       $openFileList.classList.add("file-list");
       if ($list) $openFileList.$ul.append(...$list);
       $openFileList.expand();
@@ -679,6 +680,7 @@ async function EditorManager($header, $body, $isMainEditor = false) {
       root.classList.remove("top-bar");
     }
 
+    $openFileList.manager = manager;
     $openFileList.addEventListener("click", () => switchManager());
     root.setAttribute("open-file-list-pos", openFileListPos);
     manager.emit("int-open-file-list", openFileListPos);
@@ -745,9 +747,9 @@ async function EditorManager($header, $body, $isMainEditor = false) {
 }
 
 const events = {
-  "create": [],
-  "switch": [],
-  "destroy": [],
+  create: [],
+  switch: [],
+  destroy: [],
 
   emit(event, ...args) {
     if (!events[event]) return;

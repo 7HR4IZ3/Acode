@@ -2,7 +2,7 @@ import About from '../pages/about';
 import editorSettings from './editorSettings';
 import backupRestore from './backupRestore';
 import themeSetting from 'pages/themeSetting';
-import otherSettings from './appSettings';
+import appSettings from './appSettings';
 import formatterSettings from './formatterSettings';
 import rateBox from 'dialogs/rateBox';
 import Donate from 'pages/donate';
@@ -10,7 +10,6 @@ import plugins from 'pages/plugins';
 import settingsPage from 'components/settingsPage';
 import previewSettings from './previewSettings';
 import removeAds from 'lib/removeAds';
-import appSettings from 'lib/settings';
 import helpers from 'utils/helpers';
 import openFile from 'lib/openFile';
 import settings from 'lib/settings';
@@ -19,6 +18,23 @@ import actionStack from 'lib/actionStack';
 import filesSettings from './filesSettings';
 import scrollSettings from './scrollSettings';
 import searchSettings from './searchSettings';
+
+const CUSTOM_SETTINGS = [];
+
+export function addCustomSettings(setting, settingPage) {
+  // TODO: Support other language using strings
+  if (typeof setting !== "object")
+    throw new Error("Invalid object type");
+
+  if (!setting.key)
+    throw new Error("Setting key and text required");
+  
+  const entry = [setting, settingPage];
+  CUSTOM_SETTINGS.push(entry);
+  return () => (CUSTOM_SETTINGS = CUSTOM_SETTINGS.filter(
+    item => item !== entry
+  ))
+}
 
 export default function mainSettings() {
   const title = strings.settings.capitalize();
@@ -90,6 +106,11 @@ export default function mainSettings() {
       key: 'editSettings',
       text: `${strings['edit']} settings.json`,
       icon: 'edit',
+    },
+    {
+      key: "other-settings",
+      text: strings["extra settings"] || "Extra Settings",
+      icon: "settings_applications"
     }
   ];
 
@@ -108,13 +129,6 @@ export default function mainSettings() {
    */
   async function callback(key) {
     switch (key) {
-      case 'app-settings':
-      case 'backup-restore':
-      case 'editor-settings':
-      case 'preview-settings':
-        appSettings.uiSettings[key].show();
-        break;
-
       case 'theme':
         themeSetting();
         break;
@@ -148,7 +162,7 @@ export default function mainSettings() {
       case 'reset':
         const confirmation = await confirm(strings.warning, strings['restore default settings']);
         if (confirmation) {
-          await appSettings.reset();
+          await settings.reset();
           location.reload();
         }
         break;
@@ -163,6 +177,7 @@ export default function mainSettings() {
         break;
 
       default:
+        settings.uiSettings[key]?.show();
         break;
     }
   }
@@ -170,12 +185,23 @@ export default function mainSettings() {
   const page = settingsPage(title, items, callback);
   page.show();
   
-  appSettings.uiSettings['main-settings'] = page;
-  appSettings.uiSettings['app-settings'] = otherSettings();
-  appSettings.uiSettings['file-settings'] = filesSettings();
-  appSettings.uiSettings['backup-restore'] = backupRestore();
-  appSettings.uiSettings['editor-settings'] = editorSettings();
-  appSettings.uiSettings['scroll-settings'] = scrollSettings();
-  appSettings.uiSettings['search-settings'] = searchSettings();
-  appSettings.uiSettings['preview-settings'] = previewSettings();
+  settings.uiSettings['main-settings'] = page;
+  settings.uiSettings['app-settings'] = appSettings();
+  settings.uiSettings['file-settings'] = filesSettings();
+  settings.uiSettings['backup-restore'] = backupRestore();
+  settings.uiSettings['editor-settings'] = editorSettings();
+  settings.uiSettings['scroll-settings'] = scrollSettings();
+  settings.uiSettings['search-settings'] = searchSettings();
+  settings.uiSettings['preview-settings'] = previewSettings();
+  
+  settings.uiSettings['other-settings'] = settingsPage(
+    strings["extra settings"] || "Extra Settings",
+    CUSTOM_SETTINGS.map(entry => entry[0]),
+    (key) => {
+      const entry = CUSTOM_SETTINGS.find(
+        item => item[0].key === key
+      );
+      if (entry) entry[1]?.show();
+    }
+  );
 }

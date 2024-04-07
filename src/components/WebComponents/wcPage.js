@@ -1,4 +1,5 @@
-import tile from '../tile';
+import tile from "../tile";
+import actionStack from 'lib/actionStack';
 
 export default class WCPage extends HTMLElement {
   #leadBtn;
@@ -7,7 +8,7 @@ export default class WCPage extends HTMLElement {
     hide: [],
     show: [],
     willconnect: [],
-    willdisconnect: [],
+    willdisconnect: []
   };
   #append;
   handler;
@@ -19,7 +20,7 @@ export default class WCPage extends HTMLElement {
 
   constructor() {
     super();
-    const title = this.getAttribute('data-title');
+    const title = this.getAttribute("data-title");
 
     this.handler = new PageHandler(this);
     this.#append = super.append.bind(this);
@@ -30,7 +31,7 @@ export default class WCPage extends HTMLElement {
     this.off = this.off.bind(this);
 
     this.handler.onReplace = () => {
-      if (typeof this.onwilldisconnect === 'function') {
+      if (typeof this.onwilldisconnect === "function") {
         this.onwilldisconnect();
       }
 
@@ -38,23 +39,25 @@ export default class WCPage extends HTMLElement {
     };
 
     this.handler.onRestore = () => {
-      if (typeof this.onwillconnect === 'function') {
+      if (typeof this.onwillconnect === "function") {
         this.onwillconnect();
       }
 
       this.#on.willconnect.forEach(cb => cb.call(this));
     };
 
-    this.#leadBtn = <span
-      className='icon arrow_back'
-      onclick={() => this.hide.call(this)}
-      attr-action='go-back'
-    ></span>;
+    this.#leadBtn = (
+      <span
+        className="icon arrow_back"
+        onclick={() => this.hide.call(this)}
+        attr-action="go-back"
+      ></span>
+    );
 
     this.#header = tile({
-      type: 'header',
-      text: title || 'Page',
-      lead: this.#leadBtn,
+      type: "header",
+      text: title || "Page",
+      lead: this.#leadBtn
     });
   }
 
@@ -71,26 +74,26 @@ export default class WCPage extends HTMLElement {
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
-    if (name === 'data-title') {
+    if (name === "data-title") {
       this.settitle = newValue;
     }
   }
 
   connectedCallback() {
-    this.classList.remove('hide');
-    if (typeof this.onconnect === 'function') this.onconnect();
+    this.classList.remove("hide");
+    if (typeof this.onconnect === "function") this.onconnect();
     this.#on.show.forEach(cb => cb.call(this));
   }
 
   disconnectedCallback() {
-    if (typeof this.ondisconnect === 'function') this.ondisconnect();
+    if (typeof this.ondisconnect === "function") this.ondisconnect();
     this.#on.hide.forEach(cb => cb.call(this));
   }
 
   /**
-   * Adds event listener to the page 
-   * @param {'hide' | 'show'} event 
-   * @param {function(this: WCPage):void} cb 
+   * Adds event listener to the page
+   * @param {'hide' | 'show'} event
+   * @param {function(this: WCPage):void} cb
    */
   on(event, cb) {
     if (event in this.#on) {
@@ -111,15 +114,15 @@ export default class WCPage extends HTMLElement {
 
   /**
    * Sets the title of the page
-   * @param {string} title 
+   * @param {string} title
    */
   settitle(title) {
     this.header.text = title;
   }
 
   hide() {
-    this.classList.add('hide');
-    if (typeof this.onhide === 'function') this.onhide();
+    this.classList.add("hide");
+    if (typeof this.onhide === "function") this.onhide();
     setTimeout(() => {
       this.remove();
       this.handler.remove();
@@ -127,7 +130,7 @@ export default class WCPage extends HTMLElement {
   }
 
   get body() {
-    return this.get('.main') || this.get('main');
+    return this.get(".main") || this.get("main");
   }
 
   set body($el) {
@@ -182,12 +185,25 @@ export default class WCPage extends HTMLElement {
     }
   }
 
+  show() {
+    actionStack.push({
+      id: pluginId,
+      action: this.hide
+    });
+
+    app.append(this);
+
+    this.onhide = function () {
+      actionStack.remove(pluginId);
+    };
+  }
+
   #addHeaderOrAssignHeader() {
-    if (!this.classList.contains('primary')) {
+    if (!this.classList.contains("primary")) {
       this.#append(this.#header);
-      this.#append(<div className='main'></div>);
+      this.#append(<div className="main"></div>);
     } else {
-      this.#header = this.get('header');
+      this.#header = this.get("header");
       if (this.#header) {
         this.#leadBtn = this.#header.firstChild;
       }
@@ -202,8 +218,8 @@ class PageHandler {
   onReplace;
 
   /**
-   * 
-   * @param {HTMLElement} $el 
+   *
+   * @param {HTMLElement} $el
    */
   constructor($el) {
     this.$el = $el;
@@ -211,22 +227,22 @@ class PageHandler {
     this.onhide = this.onhide.bind(this);
     this.onshow = this.onshow.bind(this);
 
-    this.$replacement = <span className='page-replacement'></span>;
+    this.$replacement = <span className="page-replacement"></span>;
     this.$replacement.handler = this;
 
-    this.$el.on('hide', this.onhide);
-    this.$el.on('show', this.onshow);
+    this.$el.on("hide", this.onhide);
+    this.$el.on("show", this.onshow);
   }
 
   /**
    * Replace current element with a replacement element
    */
   replaceEl() {
-    this.$el.off('hide', this.onhide);
+    this.$el.off("hide", this.onhide);
     if (!this.$el.isConnected || this.$replacement.isConnected) return;
-    if (typeof this.onReplace === 'function') this.onReplace();
+    if (typeof this.onReplace === "function") this.onReplace();
     this.$el.parentElement.replaceChild(this.$replacement, this.$el);
-    this.$el.classList.add('no-transition');
+    this.$el.classList.add("no-transition");
   }
 
   /**
@@ -234,19 +250,19 @@ class PageHandler {
    */
   restoreEl() {
     if (this.$el.isConnected || !this.$replacement.isConnected) return;
-    if (typeof this.onRestore === 'function') this.onRestore();
-    this.$el.off('hide', this.onhide);
+    if (typeof this.onRestore === "function") this.onRestore();
+    this.$el.off("hide", this.onhide);
     this.$replacement.parentElement.replaceChild(this.$el, this.$replacement);
-    this.$el.on('hide', this.onhide);
+    this.$el.on("hide", this.onhide);
   }
 
   onhide() {
-    this.$el.off('hide', this.onhide);
+    this.$el.off("hide", this.onhide);
     handlePagesForSmoothExprienceBack();
   }
 
   onshow() {
-    this.$el.off('show', this.onshow);
+    this.$el.off("show", this.onshow);
     handlePagesForSmoothExprience();
   }
 
@@ -259,14 +275,12 @@ class PageHandler {
  * Remove invisible pages from DOM and add them to the stack
  */
 function handlePagesForSmoothExprience() {
-  const $pages = [...tag.getAll('wc-page')];
+  const $pages = [...tag.getAll("wc-page")];
   for (let $page of $pages.slice(0, -1)) {
     $page.handler.replaceEl();
   }
 }
 
 function handlePagesForSmoothExprienceBack() {
-  [
-    ...tag.getAll('.page-replacement')
-  ].pop()?.handler.restoreEl();
+  [...tag.getAll(".page-replacement")].pop()?.handler.restoreEl();
 }

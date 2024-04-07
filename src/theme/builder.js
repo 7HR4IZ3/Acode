@@ -2,7 +2,8 @@ import Color from 'utils/color';
 
 export default class ThemeBuilder {
   #theme = {
-    "--popup-border-radius": "4px",
+    "--border-radius": "1px",
+    "--popup-border-radius": "7px",
     "--active-color": "rgb(51, 153, 255)",
     "--active-text-color": "rgb(255, 215, 0)",
     "--active-icon-color": "rgba(0, 0, 0, 0.2)",
@@ -51,6 +52,14 @@ export default class ThemeBuilder {
 
   get id() {
     return this.name.toLowerCase();
+  }
+
+  get borderRadius() {
+    return this.#theme['--border-radius'];
+  }
+
+  set borderRadius(value) {
+    this.#theme['--border-radius'] = value;
   }
 
   get popupBorderRadius() {

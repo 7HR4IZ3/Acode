@@ -164,6 +164,56 @@ light.linkTextColor = 'rgb(104, 103, 149)';
 light.borderColor = 'rgb(153, 153, 153)';
 light.popupIconColor = 'rgb(51, 62, 89)';
 
+const modern_light = createBuiltInTheme('Modern Light', 'light', 'free');
+modern_light.primaryColor = '#e7e6e6f0';
+modern_light.popupBackgroundColor = '#24292e';
+modern_light.darkenedPrimaryColor = '#dcdcdc';
+modern_light.primaryTextColor = '#3B3B3B';
+modern_light.secondaryColor = '#F8F8F8';
+modern_light.secondaryTextColor = '#3B3B3B';
+modern_light.activeColor = '#3b6069bb';
+modern_light.activeIconColor = '#3b6069bb';
+modern_light.linkTextColor = '#005FB8';
+modern_light.errorTextColor = '#F85149';
+modern_light.scrollbarColor = '#e7e6e6f0';
+modern_light.borderColor = '#CECECE';
+modern_light.popupBorderColor = '#CECECE';
+modern_light.borderRadius = '4px';
+modern_light.popupBorderRadius = '6px';
+modern_light.popupIconColor = '#3B3B3B';
+modern_light.popupBackgroundColor = '#e7e6e6f0';
+modern_light.popupTextColor = '#3B3B3B';
+modern_light.popupActiveColor = '#e7e6e6f0';
+modern_light.boxShadowColor = '#00000033';
+modern_light.buttonActiveColor = '#3b6069bb';
+modern_light.buttonBackgroundColor = '#0258A8';
+modern_light.buttonTextColor = '#e7e6e6f0';
+
+const modern_dark = createBuiltInTheme('Modern Dark', 'dark', 'free');
+modern_dark.primaryColor = '#191D24';
+modern_dark.popupBackgroundColor = '#24292e';
+modern_dark.darkenedPrimaryColor = '#191D24';
+modern_dark.primaryTextColor = '#ffffff';
+modern_dark.secondaryColor = '#24292eff';
+modern_dark.secondaryTextColor = '#ffffff';
+modern_dark.activeColor = '#3b6069bb';
+modern_dark.activeIconColor = '#3b6069bb';
+modern_dark.linkTextColor = '#3b6069bb';
+modern_dark.errorTextColor = '#f97583';
+modern_dark.scrollbarColor = '#30363d';
+modern_dark.borderColor = '#30363d';
+modern_dark.popupBorderColor = '#0e1216';
+modern_dark.borderRadius = '4px';
+modern_dark.popupBorderRadius = '6px';
+modern_dark.popupIconColor = '#ffffff';
+modern_dark.popupTextColor = '#ffffff';
+modern_dark.popupActiveColor = '#e6fa10';
+modern_dark.boxShadowColor = '#00000033';
+modern_dark.buttonActiveColor = '#3b6069bb';
+modern_dark.buttonBackgroundColor = '#3b6069bb';
+modern_dark.buttonTextColor = '#ffffff';
+
+
 const custom = createBuiltInTheme('Custom');
 custom.autoDarkened = true;
 
@@ -180,4 +230,6 @@ export default [
   menes,
   light,
   custom,
+  modern_light,
+  modern_dark
 ];

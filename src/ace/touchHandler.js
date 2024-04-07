@@ -435,6 +435,7 @@ export default function addTouchListeners(editor, minimal, onclick) {
     e.stopPropagation();
     if (minimal) return;
     const { clientX, clientY } = e;
+    console.log(clientX, clientY, (window.e = e))
     moveCursorTo(clientX, clientY);
     select();
     touchEnded = true;

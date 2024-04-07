@@ -364,6 +364,8 @@ export default {
 
   async "new-editor"([$header, $body]) {
     let manager = await EditorManager($header, $body);
+    window.EDITOR_MANAGERS.push(manager);
     new EditorFile(undefined, undefined, manager);
+    return manager;
   }
 };
