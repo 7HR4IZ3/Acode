@@ -11,12 +11,12 @@ body.no-animation {
 #sidebar {
   z-index: 109;
   position: fixed;
-  left: 0;
   top: 0;
   width: 70vw;
   max-width: 350px;
   height: 100vh;
   display: flex;
+  flex-direction: row;
   background-color: rgb(153, 153, 255);
   background-color: var(--primary-color);
   color: rgb(255, 255, 255);
@@ -24,13 +24,34 @@ body.no-animation {
   overflow: hidden;
   box-sizing: border-box;
 
+  &.left {
+    top: 0;
+    left: 0;
+  }
+
+  &.right {
+    top: 0;
+    right: 0;
+    flex-direction: row-reverse;
+  }
+
   &+.mask {
     z-index: 108;
   }
 
-  &.phone {
+  &.phone.left {
     transition: transform 300ms ease;
     transform: translate(-100%, 0);
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.07);
+
+    .resize-bar {
+      pointer-events: none;
+    }
+  }
+
+  &.phone.right {
+    transition: transform 300ms ease;
+    transform: translate(100%, 0);
     box-shadow: 2px 0 4px rgba(0, 0, 0, 0.07);
 
     .resize-bar {
@@ -42,10 +63,16 @@ body.no-animation {
     max-width: 250px;
   }
 
-  &.show {
+  &.left.show {
     transform: translate(0, 0);
     animation: show-sidebar 300ms ease 1;
   }
+
+  &.right.show {
+    transform: translate(0, 0);
+    animation: show-sidebar-right 300ms ease 1;
+  }
+
 
   .resize-bar {
     height: 100vh;

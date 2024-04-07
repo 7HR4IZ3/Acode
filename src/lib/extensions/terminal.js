@@ -1551,7 +1551,7 @@ class AcodeTerminalPlugin {
       await fs(CACHE_STORAGE).createFile("acode.terminal.state");
     }
 
-    this.page = new Page("Acode Terminal");
+    this.page = new Page("Terminal");
     this.main = this.page.querySelector(".main");
     this.page.setAttribute("id", "acodeTerm");
 
@@ -1784,6 +1784,7 @@ class AcodeTerminalPlugin {
     // acode.addIcon("acode_terminal", url.join(this.baseUrl, "term_icon.png"));
     if (sideButton) {
       this.sBtn = sideButton({
+        bottom: false,
         text: "Terminal",
         icon: "settings",
         onclick: this.#togglePage.bind(this),

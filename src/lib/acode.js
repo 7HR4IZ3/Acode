@@ -214,7 +214,7 @@ export default class Acode {
         this.#nodejsInitialized = false;
         console.error("NodeJS took too long to start!!");
         resolve(false);
-      }, 3000);
+      }, 1000 * 10);
     });
 
     setup();

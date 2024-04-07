@@ -1,7 +1,7 @@
-import './style.scss';
-import Ref from 'html-tag-js/ref';
-import actionStack from 'lib/actionStack';
-import constants from 'lib/constants';
+import "./style.scss";
+import Ref from "html-tag-js/ref";
+import actionStack from "lib/actionStack";
+import constants from "lib/constants";
 
 let $sidebar;
 /**@type {Array<(el:HTMLElement)=>boolean>} */
@@ -9,7 +9,7 @@ let preventSlideTests = [];
 
 const events = {
   show: [],
-  hide: [],
+  hide: []
 };
 
 /**
@@ -26,7 +26,7 @@ const events = {
  * @param {HTMLElement} [$toggler] - the element that will toggle the sidebar
  * @returns {Sidebar}
  */
-function create($container, $toggler) {
+export function create($container, $toggler, $position) {
   let { innerWidth } = window;
 
   const START_THRESHOLD = constants.SIDEBAR_SLIDE_START_THRESHOLD_PX; //Point where to start swipe
@@ -35,20 +35,25 @@ function create($container, $toggler) {
   const resizeBar = new Ref();
 
   $container = $container || app;
-  let mode = innerWidth > 600 ? 'tab' : 'phone';
+  let mode = innerWidth > 600 ? "tab" : "phone";
   let width = +(localStorage.sideBarWidth || MIN_WIDTH);
 
   const eventOptions = { passive: false };
-  const $el = <div id='sidebar' className={mode}>
-    <div className='apps'></div>
-    <div className='container'></div>
+  const $el = (
     <div
-      className='resize-bar w-resize'
-      onmousedown={onresize}
-      ontouchstart={onresize}
-    ></div>
-  </div>;
-  const mask = <span className='mask' onclick={hide}></span>;
+      id="sidebar"
+      className={mode + ($position === "right" ? " right" : " left")}
+    >
+      <div className="apps"></div>
+      <div className="container"></div>
+      <div
+        className="resize-bar w-resize"
+        onmousedown={onresize}
+        ontouchstart={onresize}
+      ></div>
+    </div>
+  );
+  const mask = <span className="mask" onclick={hide}></span>;
   const touch = {
     startX: 0,
     totalX: 0,
@@ -56,17 +61,17 @@ function create($container, $toggler) {
     startY: 0,
     totalY: 0,
     endY: 0,
-    target: null,
+    target: null
   };
   let openedFolders = [];
   let resizeTimeout = null;
   let setWidthTimeout = null;
 
-  $toggler?.addEventListener('click', toggle);
-  $container.addEventListener('touchstart', ontouchstart, eventOptions);
-  window.addEventListener('resize', onWindowResize);
+  $toggler?.addEventListener("click", toggle);
+  $container.addEventListener("touchstart", ontouchstart, eventOptions);
+  window.addEventListener("resize", onWindowResize);
 
-  if (mode === 'tab' && localStorage.sidebarShown === '1') {
+  if (mode === "tab" && localStorage.sidebarShown === "1") {
     show();
   }
 
@@ -78,7 +83,7 @@ function create($container, $toggler) {
       hide(true);
       innerWidth = currentWidth;
       $el.classList.remove(mode);
-      mode = innerWidth > 750 ? 'tab' : 'phone';
+      mode = innerWidth > 750 ? "tab" : "phone";
       $el.classList.add(mode);
     }, 300);
   }
@@ -93,23 +98,23 @@ function create($container, $toggler) {
     $el.activated = true;
     $el.onclick = null;
 
-    if (mode === 'phone') {
-      resizeBar.style.display = 'none';
+    if (mode === "phone") {
+      resizeBar.style.display = "none";
       $el.onshow();
       app.append($el, mask);
-      $el.classList.add('show');
+      $el.classList.add("show");
       document.ontouchstart = ontouchstart;
 
       actionStack.push({
-        id: 'sidebar',
-        action: hideMaster,
+        id: "sidebar",
+        action: hideMaster
       });
     } else {
       setWidth(width);
-      resizeBar.style.display = 'block';
+      resizeBar.style.display = "block";
       app.append($el);
       $el.onclick = () => {
-        if (!$el.textContent) acode.exec('open-folder');
+        if (!$el.textContent) acode.exec("open-folder");
       };
     }
     onshow();
@@ -117,13 +122,13 @@ function create($container, $toggler) {
 
   function hide(hideIfTab = false) {
     localStorage.sidebarShown = 0;
-    if (mode === 'phone') {
-      actionStack.remove('sidebar');
+    if (mode === "phone") {
+      actionStack.remove("sidebar");
       hideMaster();
     } else if (hideIfTab) {
       $el.activated = false;
-      root.style.removeProperty('margin-left');
-      root.style.removeProperty('width');
+      root.style.removeProperty("margin-left");
+      root.style.removeProperty("width");
       $el.remove();
       editorManager.editor.resize(true);
     }
@@ -131,7 +136,7 @@ function create($container, $toggler) {
 
   function hideMaster() {
     $el.style.transform = null;
-    $el.classList.remove('show');
+    $el.classList.remove("show");
     setTimeout(() => {
       $el.activated = false;
       mask.remove();
@@ -142,18 +147,18 @@ function create($container, $toggler) {
     document.ontouchstart = null;
     resetState();
 
-    openedFolders.map(($) => ($.onscroll = null));
+    openedFolders.map($ => ($.onscroll = null));
     openedFolders = [];
   }
 
   function onshow() {
     if ($el.onshow) $el.onshow.call($el);
-    events.show.forEach((fn) => fn());
+    events.show.forEach(fn => fn());
   }
 
   function onhide() {
     if ($el.onhide) $el.onhide.call($el);
-    events.hide.forEach((fn) => fn());
+    events.hide.forEach(fn => fn());
   }
 
   /**
@@ -164,10 +169,10 @@ function create($container, $toggler) {
     const { target } = e;
     const { clientX, clientY } = getClientCoords(e);
 
-    if (preventSlideTests.find((test) => test(target))) return;
-    if (mode === 'tab') return;
+    if (preventSlideTests.find(test => test(target))) return;
+    if (mode === "tab") return;
 
-    $el.style.transition = 'none';
+    $el.style.transition = "none";
     touch.startX = clientX;
     touch.startY = clientY;
     touch.target = target;
@@ -175,25 +180,33 @@ function create($container, $toggler) {
     if ($el.activated && !$el.contains(target) && target !== mask) {
       return;
     } else if (
-      (!$el.activated && touch.startX > START_THRESHOLD) ||
-      target === $toggler
+      (!$el.activated && (
+        $position === "right"
+          ? touch.startX < (window.innerWidth - START_THRESHOLD)
+          : touch.startX > START_THRESHOLD
+      )) || target === $toggler
     ) {
       return;
     }
+    if (
+      $position === "right"
+      && $el.activated
+      && touch.totalX <= 0
+    ) return;
 
-    document.addEventListener('touchmove', ontouchmove, eventOptions);
-    document.addEventListener('touchend', ontouchend, eventOptions);
+    document.addEventListener("touchmove", ontouchmove, eventOptions);
+    document.addEventListener("touchend", ontouchend, eventOptions);
   }
 
   /**
    * Event handler for resize event
-   * @param {MouseEvent | TouchEvent} e 
-   * @returns 
+   * @param {MouseEvent | TouchEvent} e
+   * @returns
    */
   function onresize(e) {
     const { clientX } = getClientCoords(e);
     let deltaX = 0;
-    const onMove = (e) => {
+    const onMove = e => {
       const { clientX: currentX } = getClientCoords(e);
       deltaX = currentX - clientX;
       resize(deltaX);
@@ -204,26 +217,26 @@ function create($container, $toggler) {
       else if (newWidth >= MAX_WIDTH()) width = MAX_WIDTH();
       else width = newWidth;
       localStorage.sideBarWidth = width;
-      document.removeEventListener('touchmove', onMove, eventOptions);
-      document.removeEventListener('mousemove', onMove, eventOptions);
-      document.removeEventListener('touchend', onEnd, eventOptions);
-      document.removeEventListener('mouseup', onEnd, eventOptions);
-      document.removeEventListener('mouseleave', onEnd, eventOptions);
-      document.removeEventListener('touchcancel', onEnd, eventOptions);
+      document.removeEventListener("touchmove", onMove, eventOptions);
+      document.removeEventListener("mousemove", onMove, eventOptions);
+      document.removeEventListener("touchend", onEnd, eventOptions);
+      document.removeEventListener("mouseup", onEnd, eventOptions);
+      document.removeEventListener("mouseleave", onEnd, eventOptions);
+      document.removeEventListener("touchcancel", onEnd, eventOptions);
     };
-    document.addEventListener('touchmove', onMove, eventOptions);
-    document.addEventListener('mousemove', onMove, eventOptions);
-    document.addEventListener('touchend', onEnd, eventOptions);
-    document.addEventListener('mouseup', onEnd, eventOptions);
-    document.addEventListener('mouseleave', onEnd, eventOptions);
-    document.addEventListener('touchcancel', onEnd, eventOptions);
+    document.addEventListener("touchmove", onMove, eventOptions);
+    document.addEventListener("mousemove", onMove, eventOptions);
+    document.addEventListener("touchend", onEnd, eventOptions);
+    document.addEventListener("mouseup", onEnd, eventOptions);
+    document.addEventListener("mouseleave", onEnd, eventOptions);
+    document.addEventListener("touchcancel", onEnd, eventOptions);
     return;
   }
 
   /**
    * Resize the sidebar
-   * @param {number} deltaX 
-   * @returns 
+   * @param {number} deltaX
+   * @returns
    */
   function resize(deltaX) {
     const newWidth = width + deltaX;
@@ -250,14 +263,23 @@ function create($container, $toggler) {
     if (
       !$el.activated &&
       touch.totalX < width &&
-      touch.startX < START_THRESHOLD
+      (
+        $position === "right"
+          ? touch.startX > (window.innerWidth - START_THRESHOLD)
+          : touch.startX < START_THRESHOLD
+      )
     ) {
       if (!$el.isConnected) {
         app.append($el, mask);
-        $container.style.overflow = 'hidden';
+        $container.style.overflow = "hidden";
       }
 
-      $el.style.transform = `translate3d(${-(width - touch.totalX)}px, 0, 0)`;
+      if ($position === "right") {
+        if (width + touch.totalX < 0) return;
+        $el.style.transform = `translate3d(${(width + touch.totalX)}px, 0, 0)`;
+      } else {
+        $el.style.transform = `translate3d(${-(width - touch.totalX)}px, 0, 0)`;
+      }
     } else if (touch.totalX < 0 && $el.activated) {
       $el.style.transform = `translate3d(${touch.totalX}px, 0, 0)`;
     }
@@ -274,27 +296,41 @@ function create($container, $toggler) {
 
     const threshold = $el.getWidth() / 3;
 
-    if (
-      ($el.activated && touch.totalX > -threshold) ||
-      (!$el.activated && touch.totalX >= threshold)
-    ) {
-      lclShow();
-    } else if (
-      (!$el.activated && touch.totalX < threshold) ||
-      ($el.activated && touch.totalX <= -threshold)
-    ) {
-      hide();
+    if ($position === "right") {
+      if (
+        ($el.activated && touch.totalX < -threshold) ||
+        (!$el.activated && touch.totalX <= threshold)
+      ) {
+        lclShow();
+      } else if (
+        (!$el.activated && touch.totalX > threshold) ||
+        ($el.activated && touch.totalX >= -threshold)
+      ) {
+        hide();
+      }
+    } else {
+      if (
+        ($el.activated && touch.totalX > -threshold) ||
+        (!$el.activated && touch.totalX >= threshold)
+      ) {
+        lclShow();
+      } else if (
+        (!$el.activated && touch.totalX < threshold) ||
+        ($el.activated && touch.totalX <= -threshold)
+      ) {
+        hide();
+      }
     }
 
     function lclShow() {
       onshow();
       $el.activated = true;
       $el.style.transform = `translate3d(0, 0, 0)`;
-      document.addEventListener('touchstart', ontouchstart, eventOptions);
-      actionStack.remove('sidebar');
+      document.addEventListener("touchstart", ontouchstart, eventOptions);
+      actionStack.remove("sidebar");
       actionStack.push({
-        id: 'sidebar',
-        action: hideMaster,
+        id: "sidebar",
+        action: hideMaster
       });
       resetState();
     }
@@ -312,18 +348,18 @@ function create($container, $toggler) {
     touch.endX = 0;
     touch.target = null;
     $el.style.transition = null;
-    document.removeEventListener('touchmove', ontouchmove, eventOptions);
-    document.removeEventListener('touchend', ontouchend, eventOptions);
+    document.removeEventListener("touchmove", ontouchmove, eventOptions);
+    document.removeEventListener("touchend", ontouchend, eventOptions);
   }
 
   /**
    * Set the width of the sidebar
-   * @param {number} width 
+   * @param {number} width
    */
   function setWidth(width) {
-    $el.style.transition = 'none';
-    $el.style.maxWidth = width + 'px';
-    root.style.marginLeft = width + 'px';
+    $el.style.transition = "none";
+    $el.style.maxWidth = width + "px";
+    root.style.marginLeft = width + "px";
     root.style.width = `calc(100% - ${width}px)`;
     clearTimeout(setWidthTimeout);
     setWidthTimeout = setTimeout(() => {
@@ -333,7 +369,7 @@ function create($container, $toggler) {
 
   /**
    * Get the clientX and clientY from the event
-   * @param {TouchEvent | MouseEvent} e 
+   * @param {TouchEvent | MouseEvent} e
    * @returns {{clientX: number, clientY: number}}
    */
   function getClientCoords(e) {
@@ -344,10 +380,10 @@ function create($container, $toggler) {
   $el.show = show;
   $el.hide = hide;
   $el.toggle = toggle;
-  $el.onshow = () => { };
+  $el.onshow = () => {};
   $el.getWidth = function () {
     const width = innerWidth * 0.7;
-    return mode === 'phone' ? (width >= 350 ? 350 : width) : MIN_WIDTH;
+    return mode === "phone" ? (width >= 350 ? 350 : width) : MIN_WIDTH;
   };
 
   return $el;
@@ -369,31 +405,39 @@ Sidebar.hide = () => $sidebar?.hide();
 Sidebar.show = () => $sidebar?.show();
 Sidebar.toggle = () => $sidebar?.toggle();
 
-Sidebar.on = (/**@type {'hide'|'show'} */ event, /**@type {Function} */ callback) => {
+Sidebar.on = (
+  /**@type {'hide'|'show'} */ event,
+  /**@type {Function} */ callback
+) => {
   if (!events[event]) return;
   events[event].push(callback);
 };
 
-Sidebar.off = (/**@type {'hide'|'show'} */ event, /**@type {Function} */ callback) => {
+Sidebar.off = (
+  /**@type {'hide'|'show'} */ event,
+  /**@type {Function} */ callback
+) => {
   if (!events[event]) return;
-  events[event] = events[event].filter((cb) => cb !== callback);
+  events[event] = events[event].filter(cb => cb !== callback);
 };
 
 /**@type {HTMLElement} */
 Sidebar.el = null;
 
-Object.defineProperty(Sidebar, 'el', {
-  get() { return $sidebar; }
+Object.defineProperty(Sidebar, "el", {
+  get() {
+    return $sidebar;
+  }
 });
 
-preventSlideTests.push((target) => {
+preventSlideTests.push(target => {
   let lastEl;
-  return testScrollable(target.closest('.scroll'));
+  return testScrollable(target.closest(".scroll"));
 
   /**
    * Test if the element is scrollable recursively
-   * @param {HTMLElement} container 
-   * @returns 
+   * @param {HTMLElement} container
+   * @returns
    */
   function testScrollable(container) {
     if (!container || container === lastEl) return false;
@@ -405,21 +449,23 @@ preventSlideTests.push((target) => {
 
     lastEl = container;
 
-    return testScrollable(container.parentElement.closest('.scroll'));
+    return testScrollable(container.parentElement.closest(".scroll"));
   }
 });
 
-preventSlideTests.push((target) => {
-  return target instanceof HTMLInputElement
-    || target instanceof HTMLTextAreaElement
-    || target.contentEditable === 'true';
+preventSlideTests.push(target => {
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target.contentEditable === "true"
+  );
 });
 
 export default Sidebar;
 
 /**
  * Prevent the sidebar from sliding when the test returns true
- * @param {(target:Element)=>boolean} test 
+ * @param {(target:Element)=>boolean} test
  */
 export function preventSlide(test) {
   preventSlideTests.push(test);

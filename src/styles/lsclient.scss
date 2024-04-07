@@ -109,6 +109,16 @@ ul.breadcrumbs {
   width: 80%;
 }
 
+.container {
+  &.breadcrumb-dropdown {
+    position: relative;
+    border: none;
+    max-height: auto;
+    width: 100%;
+  }
+}
+
+
 .breadcrumbs {
   display: flex;
   overflow-x: auto;

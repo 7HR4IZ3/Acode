@@ -24,11 +24,9 @@ import $_menu from "views/menu.hbs";
 import plugins from "pages/plugins";
 import fsOperation from "fileSystem";
 import toast from "components/toast";
-import sidebarApps from "sidebarApps";
 import EditorFile from "lib/editorFile";
 import openFolder from "lib/openFolder";
 import checkFiles from "lib/checkFiles";
-import Sidebar from "components/sidebar";
 import actionStack from "lib/actionStack";
 import loadPolyFill from "utils/polyfill";
 import loadPlugins from "lib/loadPlugins";
@@ -45,13 +43,17 @@ import windowResize from "handlers/windowResize";
 import quickToolsInit from "handlers/quickToolsInit";
 import checkPluginsUpdate from "lib/checkPluginsUpdate";
 
+import SideButton from "components/sideButton";
+import Sidebar, { create as createSidebar } from "components/sidebar";
+
 import { initModes } from "ace/modelist";
 import { initFileList } from "lib/fileList";
 import { addedFolder } from "lib/openFolder";
-import { keydownState } from "handlers/keyboard";
-import { getEncoding, initEncodings } from "utils/encodings";
 import { setKeyBindings } from "ace/commands";
+import { keydownState } from "handlers/keyboard";
 import { sideButtonContainer } from "components/sideButton";
+import { getEncoding, initEncodings } from "utils/encodings";
+import { sidebarApps, rightSidebarApps, loadApps } from "sidebarApps";
 
 const previousVersionCode = parseInt(localStorage.versionCode, 10);
 
@@ -243,6 +245,13 @@ async function loadApp(acode) {
   });
   const $main = <main></main>;
   const $sidebar = Sidebar({ container: $main, toggler: $navToggler });
+  const $rightSidebar = createSidebar($main, undefined, "right");
+  const $rightToggler = SideButton({
+    icon: "menu", onclick: () => $rightSidebar.show()
+  });
+  rightSidebarApps.init($rightSidebar);
+  $rightToggler.show();
+
   const $runBtn = (
     <span
       style={{ fontSize: "1.2em" }}
@@ -288,6 +297,7 @@ async function loadApp(acode) {
       id="header-toggler"
     ></span>
   );
+
   const folders = helpers.parseJSON(localStorage.folders);
   const files = helpers.parseJSON(localStorage.files) || [];
   $header.insertBefore($splitBtn, $header.lastChild);
@@ -353,9 +363,7 @@ async function loadApp(acode) {
   updateSideButtonContainer();
 
   sidebarApps.init($sidebar);
-  try {
-    await sidebarApps.loadApps();
-  } catch {}
+  await loadApps();
 
   editorManager.onupdate = onEditorUpdate;
 
@@ -393,10 +401,10 @@ async function loadApp(acode) {
     $main.append(sideButtonContainer);
   }
 
-  $sidebar.onshow = function () {
+  Sidebar.on("show", () => {
     const activeFile = editorManager.activeFile;
     if (activeFile) editorManager.editor.blur();
-  };
+  });
   sdcard.watchFile(KEYBINDING_FILE, async () => {
     await setKeyBindings(editorManager.editor);
     toast(strings["key bindings updated"]);

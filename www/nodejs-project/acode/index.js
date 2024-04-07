@@ -59,6 +59,8 @@ channel.on("acode:exec", ({ code, context }) => {
   }).bind(context || {})();
 });
 
+channel.on("acode:exit", () => process.exit());
+
 channel.on("acode:initialize", initialize);
 channel.on("acode:loadPlugin", loadPlugin);
 channel.on("acode:loadPlugins", loadPlugins);

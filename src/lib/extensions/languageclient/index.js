@@ -4,6 +4,8 @@ import pty from "lib/pty";
 import Page from "components/page";
 import sideButton from "components/sideButton";
 import settingsPage from "components/settingsPage";
+
+import { rightSidebarApps } from "../../../sidebarApps";
 import { addCustomSettings } from "settings/mainSettings";
 
 import {
@@ -22,7 +24,6 @@ import {
 } from "./ace-linters/type-converters/lsp-converters";
 import { BaseService } from "./ace-linters/services/base-service";
 import { LanguageClient } from "./ace-linters/services/language-client";
-
 
 /**
  * @typedef {object} EditorManager
@@ -150,9 +151,7 @@ export class AcodeLanguageServerPlugin {
 
     this.$treeBtn = sideButton("Structure", "edit", () => {
       this.$tree.innerHTML = "";
-      this.$tree.appendChild(
-        this.$breadcrumbsNode.cloneNode(true)
-      )
+      this.$tree.appendChild(this.$breadcrumbsNode.cloneNode(true));
       this.$tree.show();
     });
 
@@ -346,14 +345,16 @@ export class AcodeLanguageServerPlugin {
       this.$completers = editor.completers.splice(1, 2);
     }
 
-    const {list, cb} = this.settingsObj;
+    const { list, cb } = this.settingsObj;
     addCustomSettings(
       {
         key: "languageclient-settings",
         text: strings["languageclient"] || "Language Client",
-        index: 2, icon: "code"
-      }, settingsPage("Language Client", list, cb)
-    )
+        index: 2,
+        icon: "code"
+      },
+      settingsPage("Language Client", list, cb)
+    );
 
     let wrap = (mode, callback) => {
       return async (...args) => {
@@ -496,8 +497,7 @@ export class AcodeLanguageServerPlugin {
 
     // For compatibitlity with plugins
     acode.define("acode-language-client", this.$exports);
-
-    acode.define("languageclient", this.$exports);
+    acode.define("language-client", this.$exports);
 
     providerTarget.addEventListener("initialized", ({ detail }) => {
       // console.log("Initialized:", detail);
@@ -678,6 +678,12 @@ export class AcodeLanguageServerPlugin {
       format: ["java"],
       config: {}
     });
+
+    rightSidebarApps.add("code", "ls-structure", "Code Structure", node => {
+      this.$sidebarNode = node;
+      this.$sidebarNode.classList.add("breadcrumb-dropdown");
+      this.$sidebarNode.classList.add("ace_autocomplete");
+    });
   }
 
   #getProgress(token) {
@@ -749,6 +755,8 @@ export class AcodeLanguageServerPlugin {
   destroy() {}
 
   async #openFile(uri, range) {
+    uri = decodeURIComponent(uri);
+
     let url = acode.require("url");
     let helpers = acode.require("helpers");
     let file = acode.require("editorfile");
@@ -853,12 +861,12 @@ export class AcodeLanguageServerPlugin {
     mainElement.after(this.$breadcrumbsNode);
 
     document.addEventListener("click", ({ target }) => {
-      if (
-        !target.matches(
-          ".breadcrumbs, .breadcrumb-dropdown, .breadcrumb-item *, " +
-            ".breadcrumb-name, .dropdown-item, .dropdown-name *"
-        )
-      ) {
+      if (target.matches(".container.breadcrumb-dropdown *")) {
+        this.$mainNode?.classList.remove("visible");
+        return;
+      }
+
+      if (!target.matches(".breadcrumbs, .breadcrumbs *, .dropdown *")) {
         if (this.$mainNode?.classList.contains("visible")) {
           this.$mainNode?.classList.remove("visible");
         }
@@ -1559,37 +1567,6 @@ export class AcodeLanguageServerPlugin {
         node.appendChild(dropdown);
       }
 
-      node.onclick = ({ target }) => {
-        if (target === node || target.parentElement === node) {
-          if (object.children.length && dropdown) {
-            dropdown.classList.toggle("visible");
-          }
-          breadcrumbNodes[level - 1] = object;
-          breadcrumbNodes.splice(level);
-          buildBreadcrumbNodes();
-
-          if (!object.location) return;
-
-          let start = object.location.range.start;
-          let end = object.location.range.end;
-
-          editor.scrollToLine(start.line - 10);
-          editorManager.editor.session.selection.moveCursorTo(
-            start.line,
-            start.character
-          );
-
-          if (this.$currentRange !== undefined) {
-            editor.session.removeMarker(this.$currentRange);
-          }
-
-          this.$currentRange = editor.session.addMarker(
-            new Range(start.line, 0, end.line, 0),
-            "ace_selected-word",
-            "fullLine"
-          );
-        }
-      };
       return [node, dropdown];
     };
 
@@ -1604,15 +1581,59 @@ export class AcodeLanguageServerPlugin {
           children: tree
         };
       }
+      const [dropdown, structure] = createNode(
+        breadcrumbNodes[currentIndex],
+        currentIndex
+      );
       this.$mainNode = tag("div", {
-        children: [createNode(breadcrumbNodes[currentIndex], currentIndex)[1]]
+        children: [structure]
       });
+
+      if (this.$sidebarNode) {
+        this.$sidebarNode.innerHTML = "";
+        this.$sidebarNode.appendChild(
+          tag("div", {
+            children: [structure.cloneNode(true)]
+          })
+        );
+      }
     }
     this.$mainNode?.classList.add("breadcrumb-dropdown");
     this.$mainNode?.classList.add("ace_autocomplete");
     buildBreadcrumbNodes();
 
     return this.$mainNode ? document.body.appendChild(this.$mainNode) : null;
+  }
+
+  #expandNode({ target }) {
+    if (target === node || target.parentElement === node) {
+      if (object.children.length && dropdown) {
+        dropdown.classList.toggle("visible");
+      }
+      breadcrumbNodes[level - 1] = object;
+      breadcrumbNodes.splice(level);
+      buildBreadcrumbNodes();
+
+      if (!object.location) return;
+
+      let start = object.location.range.start;
+      let end = object.location.range.end;
+
+      editor.scrollToLine(start.line - 10);
+      editorManager.editor.session.selection.moveCursorTo(
+        start.line, start.character
+      );
+
+      if (this.$currentRange !== undefined) {
+        editor.session.removeMarker(this.$currentRange);
+      }
+
+      this.$currentRange = editor.session.addMarker(
+        new Range(start.line, 0, end.line, 0),
+        "ace_selected-word",
+        "fullLine"
+      );
+    }
   }
 
   getDefaultValue(settingValue, defaultValue = true) {

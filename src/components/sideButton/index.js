@@ -1,29 +1,40 @@
 import "./style.scss";
 
 /**@type {HTMLDivElement} */
-export const sideButtonContainer = <div className="side-buttons"></div>;
+export const sideButtonContainer = (
+  <div className="side-buttons">
+    <div className="side-button seperator"></div>
+  </div>
+);
 
 export default function SideButtons({
   text,
   icon,
   onclick,
+  bottom,
   backgroundColor,
-  textColor
+  textColor,
+  hover
 }) {
   const $button = (
     <button
-      className="side-button"
+      className={"side-button" + (hover ? " hover" : "")}
       onclick={onclick}
-      style={{ /* backgroundColor, color: textColor*/ }}
+      style={
+        {
+          /* backgroundColor, color: textColor*/
+        }
+      }
     >
       <i className={`icon ${icon}`}></i>
-      <span>{text}</span>
+      {text && <span>{text}</span>}
     </button>
   );
 
   return {
     show() {
-      sideButtonContainer.append($button);
+      const seperator = sideButtonContainer.get(".seperator");
+      bottom ? seperator.after($button) : seperator.before($button);
     },
     hide() {
       $button.remove();

@@ -43,6 +43,16 @@
   }
 }
 
+@keyframes show-sidebar-right {
+  0% {
+    transform: translate(100%, 0);
+  }
+
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
 @keyframes menu-grow {
   0% {
     transform: scale(0) translateZ(0);
