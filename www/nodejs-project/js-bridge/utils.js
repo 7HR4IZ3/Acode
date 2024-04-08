@@ -1,4 +1,4 @@
-const deasync = null// require('deasync');
+const deasync = require('deasync');
 
 function generateRandomID(length = 20) {
   return String(
@@ -10,14 +10,14 @@ function generateRandomID(length = 20) {
 
 function isRawObject(item) {
   if (item === null || typeof item !== "object") return false;
-  return item instanceof Object && item.constructor == Object().constructor;
+  return item.constructor?.name == "Object";
 }
 
 function promiseToSync(promise) {
   return (...args) => {
     return deasync(cb => {
       promise(...args)
-        .then(res => cb(null, res))
+        .then(res => cb(res))
         .catch(err => cb(err, null));
     })();
   }
@@ -25,10 +25,7 @@ function promiseToSync(promise) {
 
 function evaluatePromiseSync(promise) {
   return deasync(cb => {
-    promise.then(
-      res => cb(null, res),
-      err => cb(err, null)
-    );
+    promise.then(res => cb(null, res)).catch(cb);
   })();
 }
 

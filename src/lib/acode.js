@@ -120,7 +120,8 @@ export default class Acode {
     this.#nodejs = window.nodejs;
     delete window.nodejs;
 
-    const transporter = new BridgeTransporter(this.#nodejs.channel);
+    const bridgeChannel = this.#nodejs.createChannel("acode-bridge");
+    const transporter = new BridgeTransporter(bridgeChannel);
     const server = new BaseBridgeServer({ transporter });
 
     server.configure({
@@ -131,14 +132,16 @@ export default class Acode {
       this.#connections.push({ client, connection });
 
       let { encoder, decoder } = connection[getClass];
-      this.#nodejs.channel.setStringify(payload => stringify(payload, encoder));
-      this.#nodejs.channel.setParse(data => parse(data, decoder));
+      bridgeChannel.setParse(data => parse(data, decoder));
+      bridgeChannel.setStringify(payload => stringify(payload, encoder));
     });
     server.start();
-
-    this.#nodejs.channel.on("process:stdout", data => {
-      console.log(data);
-    });
+    
+    for (let name of ["log", "info", "debug", "warn"]) {
+      this.#nodejs.channel.on(
+        "process:" + name, data => console[name](data)
+      );
+    }
 
     this.#nodejs.channel.on("process:stderr", data => {
       console.error(data);
@@ -204,17 +207,28 @@ export default class Acode {
   }
 
   async initialize() {
+    this.setLoadingMessage("Loading nodejs backend...");
     await new Promise((resolve, reject) => {
       if (!this.#nodejsInitialized)
         return resolve(false);
-      this.#nodejs.channel.once(
-        "server:started", () => resolve(true)
-      );
-      setTimeout(() => {
+
+      let timeout;
+      this.#nodejs.channel.once("acode:pong", () => {
+        clearTimeout(timeout); resolve(true);
+      });
+      // Remove next build (fixed in backend)
+      this.#nodejs.channel.once("pong", () => {
+        clearTimeout(timeout); resolve(true);
+      });
+
+      this.#nodejs.channel.post("acode:ping");
+
+      timeout = setTimeout(() => {
         this.#nodejsInitialized = false;
+        this.setLoadingMessage("Nodejs took too long...");
         console.error("NodeJS took too long to start!!");
         resolve(false);
-      }, 1000 * 10);
+      }, 1000 * 5);
     });
 
     setup();
@@ -222,8 +236,8 @@ export default class Acode {
   }
 
   get nodejs() {
-    if (!this.#nodejsInitialized)
-      throw new Error("NodeJS not initialized");
+    // if (!this.#nodejsInitialized)
+    //   throw new Error("NodeJS not initialized");
     return this.#nodejs;
   }
 

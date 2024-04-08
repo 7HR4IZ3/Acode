@@ -1,4 +1,5 @@
 import fs from ".";
+import Url from "utils/Url";
 
 export class FileError extends Error {
   constructor(code, ...params) {

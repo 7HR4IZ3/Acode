@@ -9,9 +9,12 @@
   "author": "Thraize",
   "license": "MIT",
   "dependencies": {
+    "bindings": "^1.5.0",
+    "deasync": "file:deasync-src",
     "http-server": "^14.1.1",
     "live-server": "^1.1.0",
     "lossless-json": "^4.0.1",
+    "node-addon-api": "^8.0.0",
     "ws": "^8.16.0"
   }
 }

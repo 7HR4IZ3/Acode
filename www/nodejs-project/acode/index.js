@@ -3,7 +3,7 @@ process.chdir(__dirname);
 
 const fs = require("node:fs");
 const path = require("node:path");
-const { app, channel } = require("cordova-bridge");
+const { app, channel, createChannel } = require("cordova-bridge");
 const { parse, stringify } = require("lossless-json");
 const {
   getClass,
@@ -18,17 +18,15 @@ const npm = require("../npm");
 channel.post("server:started", {});
 
 // Wrap console functions
-(function(...names) {
-  for (let name of names) {
-    const originalCallback = console[name];
-    if (originalCallback) {
-      console[name] = function (...data) {
-        channel.post("process:stdout", util.format(...data) + "\n");
-        originalCallback.bind(console)(...data);
-      };
-    }
+for (let name of ["log", "info", "debug", "warn"]) {
+  const originalCallback = console[name];
+  if (originalCallback) {
+    console[name] = function (...data) {
+      channel.post("process:" + name, util.format(...data) + "\n");
+      originalCallback.bind(console)(...data);
+    };
   }
-})("log", "info", "debug", "warn");
+}
 
 npm.load().then(() => channel.post("npm:loaded", {}));
 
@@ -53,12 +51,12 @@ process.stderr.on("data", data =>
 process.on("warning", data => channel.post("process:warning", data));
 
 // Acode Events
-channel.on("acode:exec", ({ code, context }) => {
-  (function () {
-    eval(code);
-  }).bind(context || {})();
+channel.on("acode:exec", (code, context) => {
+  (function () { eval(code) }).bind(context || {})();
 });
+channel.on("acode:require", (file) => require(file));
 
+channel.on("acode:ping", () => channel.post("acode:pong", {}));
 channel.on("acode:exit", () => process.exit());
 
 channel.on("acode:initialize", initialize);
@@ -91,29 +89,26 @@ async function loadPlugins() {}
 async function loadPlugin({ plugin, pluginID, justInstalled }) {
   try {
     channel.post("acode:loadPlugin:status", {
-      pluginID,
-      error: null
+      pluginID, error: null
     });
   } catch (err) {
     channel.post("acode:loadPlugin:status", {
-      pluginID,
-      error: err.toString()
+      pluginID, error: err.toString()
     });
   }
 }
 
 // Acode to NodeJS bridge
-const transporter = new BridgeTransporter(channel);
+const bridgeChannel = createChannel("acode-bridge");
+const transporter = new BridgeTransporter(bridgeChannel);
 const client = new BaseBridgeClient({
-  transporter,
-  context: { npm, require, global },
-  proxy: ChainProxy,
-  connection: ChainConnection
+  transporter, context: { npm, require, global },
+  // proxy: ChainProxy, connection: ChainConnection
 });
 
 const window = client.start();
 const { encoder, decoder } = window[getClass];
-channel.setStringify(payload => stringify(payload, encoder));
-channel.setParse(data => parse(data, decoder));
+bridgeChannel.setStringify(payload => stringify(payload, encoder));
+bridgeChannel.setParse(data => parse(data, decoder));
 
 channel.post("server:ready", {});

@@ -358,12 +358,11 @@ export default {
     editorManager.activeFile.eol = eol;
   },
 
-  async "new-workspace"() {},
-  async "save-workspace"() {},
-  async "close-workspace"() {},
-
-  async "new-editor"([$header, $body]) {
-    let manager = await EditorManager($header, $body);
+  async "new-editor"() {
+    const $body = app.get("main").appendChild(
+      <div className="editor"></div>
+    );
+    let manager = await EditorManager(app.get("header"), $body);
     window.EDITOR_MANAGERS.push(manager);
     new EditorFile(undefined, undefined, manager);
     return manager;

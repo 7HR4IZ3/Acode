@@ -6,10 +6,12 @@
   "main": "index.js",
   "scripts": {
     "lang": "node ./utils/lang.js",
+    "compile": "cordova build android -- --jvmargs='-Xmx1536M --add-opens=java.base/java.io=ALL-UNNAMED'",
     "build": "sh utils/scripts/build.sh",
     "start": "sh utils/scripts/start.sh",
     "clean": "sh utils/scripts/clean.sh android android@10",
     "plugin": "sh utils/scripts/plugin.sh",
+    "watch": "sh ./utils/scripts/watch.sh",
     "setup": "node ./utils/setup.js",
     "esbuild": "node ./utils/esbuild.mjs",
     "esbuild:watch": "node ./utils/esbuild.mjs watch",

@@ -266,18 +266,10 @@ async function loadApp(acode) {
       style={{ fontSize: "1.2em" }}
       className="icon add_circle"
       attr-action="new-editor"
-      onclick={() =>
-        acode.exec("new-editor", [
-          $header,
-          $main.appendChild(<div className="editor"></div>)
-        ])
-      }
+      onclick={() => acode.exec("new-editor")}
       oncontextmenu={async () => {
         const { activeFile } = editorManager;
-        const manager = await acode.exec("new-editor", [
-          $header,
-          $main.appendChild(<div className="editor"></div>)
-        ]);
+        const manager = await acode.exec("new-editor");
         editorManager.files.at(-1).makeActive();
         activeFile.editorManager = manager;
         activeFile.makeActive();

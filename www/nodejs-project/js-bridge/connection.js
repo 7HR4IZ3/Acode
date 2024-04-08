@@ -26,6 +26,9 @@ class BaseConnection {
     return new Proxy(() => {}, this.proxyHandlers);
   }
 
+  get decoder() { return this.#decoder.bind(this) }
+  get encoder() { return this.#encoder.bind(this) }
+
   #storeAsProxy(item) {
     for (let [value, key] of this.#proxies.entries()) {
       try {
@@ -90,6 +93,14 @@ class BaseConnection {
 
     // For everything else
     let location = this.#storeAsProxy(value);
+
+    if (value instanceof Promise) {
+      return {
+        $$__type__$$: "bridge_proxy",
+        $$__obj_type__$$: "awaitable",
+        $$__location__$$: location
+      };
+    }
 
     if (util.isFunction(value)) {
       return {

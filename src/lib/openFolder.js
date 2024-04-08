@@ -1,4 +1,5 @@
 import escapeStringRegexp from "escape-string-regexp";
+import { promises as fs } from "fileSystem/wrapper#";
 import fsOperation from "fileSystem";
 import collapsableList from "components/collapsableList";
 import tile from "components/tile";
@@ -190,17 +191,14 @@ async function expandList($list) {
         .sortDir(entries, {
           sortByName: true,
           showHiddenFiles: true
-        }).map(async (entry) => {
+        })
+        .map(async entry => {
           const name = entry.name || Path.basename(entry.url);
           if (entry.isDirectory) {
             const $list = createFolderTile(name, entry.url);
             $ul.appendChild($list);
-  
-            if (
-              listState[entry.url] ||
-              (await fsOperation(entry.url)
-                .lsDir()).length == 1
-            ) {
+
+            if (listState[entry.url] || entries.length === 1) {
               $list.expand();
             }
           } else {
@@ -306,7 +304,8 @@ async function handleContextmenu(type, url, name, $target) {
     customOptions.map(async ({ id, option }) => {
       if (typeof option == "function") {
         option = await option({
-          path: url, name,
+          path: url,
+          name,
           isRoot: type == "root",
           type: helpers.isFile(type) ? "file" : "folder"
         });
@@ -374,7 +373,9 @@ function execOperation(type, action, url, $target, name) {
 
     default:
       return customOptionsExec[action]?.({
-        path: url, name, isRoot: type == "root",
+        path: url,
+        name,
+        isRoot: type == "root",
         type: helpers.isFile(type) ? "file" : "folder"
       });
   }
@@ -818,7 +819,7 @@ openFolder.find = url => {
 
 openFolder.addOption = option => {
   let optionId = (option.id = option.id ?? ++customOptionsId);
-  if (customOptions.find(item => (item.id === optionId))) {
+  if (customOptions.find(item => item.id === optionId)) {
     throw new Error("Option already exists");
   }
 
@@ -831,10 +832,8 @@ openFolder.addOption = option => {
 };
 
 openFolder.removeOption = optionId => {
-  customOptions.filter(
-    option => (option.id !== optionId)
-  );
+  customOptions.filter(option => option.id !== optionId);
   return true;
-}
+};
 
 export default openFolder;

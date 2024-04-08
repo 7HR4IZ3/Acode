@@ -1,21 +1,21 @@
-import constants from './constants';
-import { addedFolder } from './openFolder';
-import appSettings from './settings';
+import constants from "./constants";
+import { addedFolder } from "./openFolder";
+import appSettings from "./settings";
 
-export default () => {
+export default (returnState = false) => {
   if (!window.editorManager) return;
 
   const filesToSave = [];
   const folders = [];
   const { value: settings } = appSettings;
-  
+
   for (const manager of window.EDITOR_MANAGERS) {
     const managerFiles = [];
     const { editor, files, activeFile } = manager;
-  
-    files.forEach((file) => {
+
+    files.forEach(file => {
       if (file.id === constants.DEFAULT_FILE_SESSION) return;
-  
+
       const fileJson = {
         id: file.id,
         uri: file.uri,
@@ -31,9 +31,9 @@ export default () => {
         editable: file.editable,
         encoding: file.encoding,
         render: activeFile.id === file.id,
-        folds: parseFolds(file.session.getAllFolds()),
+        folds: parseFolds(file.session.getAllFolds())
       };
-  
+
       if (settings.rememberFiles || fileJson.isUnsaved)
         managerFiles.push(fileJson);
     });
@@ -44,7 +44,7 @@ export default () => {
   }
 
   if (settings.rememberFolders) {
-    addedFolder.forEach((folder) => {
+    addedFolder.forEach(folder => {
       const { url, saveState, title, listState, listFiles } = folder;
       folders.push({
         url,
@@ -52,22 +52,25 @@ export default () => {
           saveState,
           name: title,
           listState,
-          listFiles,
-        },
+          listFiles
+        }
       });
     });
   }
+
+  if (returnState) return { files: filesToSave, folders };
 
   localStorage.files = JSON.stringify(filesToSave);
   localStorage.folders = JSON.stringify(folders);
 };
 
 function parseFolds(folds) {
-  return folds.map((fold) => {
+  return folds.map(fold => {
     const { range, ranges, placeholder } = fold;
     return {
-      range, placeholder,
-      ranges: parseFolds(ranges),
+      range,
+      placeholder,
+      ranges: parseFolds(ranges)
     };
   });
 }

@@ -7,12 +7,16 @@ class BaseEventHandler {
     this.#getContext = getContextCallback;
   }
 
-  processAction(action, data, respond) {
+  async processAction(action, data, respond) {
     const callback = this["action:" + action];
     if (!callback) return false;
 
     try {
-      respond(callback.call(this, data));
+      if (action === "action:await_proxy") {
+        respond(await callback.call(this, data));
+      } else {
+        respond(callback.call(this, data));
+      }
     } catch (error) {
       respond(null, error);
     }

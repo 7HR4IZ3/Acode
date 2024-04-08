@@ -1,7 +1,11 @@
 const { EventEmitter } = require("node:events");
 const { WebSocket, WebSocketServer } = require("ws");
 const { parse, stringify } = require("lossless-json");
-const { isRawObject, generateRandomID } = require("./utils.js");
+const {
+  isRawObject,
+  generateRandomID,
+  evaluatePromiseSync
+} = require("./utils.js");
 
 class BaseTransporterClient extends EventEmitter {
   recieve(message) {
@@ -15,6 +19,10 @@ class BaseTransporterClient extends EventEmitter {
 
       this.send({ messageID, message });
     });
+  }
+
+  recieveSync(message) {
+    return evaluatePromiseSync(this.recieve(message));
   }
 }
 
@@ -155,7 +163,8 @@ class BaseTransporter extends EventEmitter {
         if (contentLengthMatch) {
           message = message.split("\r\n\r\n")[1];
           this.#handleMessage(
-            client, message,
+            client,
+            message,
             parseInt(contentLengthMatch[1], 10)
           );
         } else {
@@ -199,6 +208,10 @@ class WebSocketClient extends EventEmitter {
       this.send({ messageID, message });
     });
   }
+
+  recieveSync(message) {
+    return evaluatePromiseSync(this.recieve(message));
+  }
 }
 
 class WebSocketTransporter extends BaseTransporter {
@@ -212,9 +225,7 @@ class WebSocketTransporter extends BaseTransporter {
     socket.on("open", () => client.emit("ready"));
     socket.on("close", () => client.emit("close"));
     socket.on("error", () => client.emit("error"));
-    socket.on("message", data =>
-      this.handleMessage(client, data.toString())
-    );
+    socket.on("message", data => this.handleMessage(client, data.toString()));
 
     return client;
   }
@@ -227,16 +238,12 @@ class WebSocketTransporter extends BaseTransporter {
     console.log(`* Server started on port ${port}`);
 
     server.on("connection", socket => {
-      let client = new WebSocketClient(
-        socket, this.prepare.bind(this)
-      );
+      let client = new WebSocketClient(socket, this.prepare.bind(this));
 
       socket.on("error", () => client.emit("error"));
       socket.on("close", () => client.emit("close"));
 
-      socket.on("message", data => 
-        this.handleMessage(client, data.toString())
-      );
+      socket.on("message", data => this.handleMessage(client, data.toString()));
 
       this.emit("connection", client);
     });
@@ -252,7 +259,7 @@ class BridgeClient extends BaseTransporterClient {
   }
 
   send(message) {
-    console.log("Sending:", message)
+    // console.log("Sending:", message);
     this.#channel.post("bridge:message", message);
   }
 }
@@ -272,13 +279,12 @@ class BridgeTransporter extends BaseTransporter {
     this.#channel.on("bridge:close", () => client.emit("close"));
     this.#channel.on("bridge:error", () => client.emit("error"));
     this.#channel.on("bridge:message", data => {
-      console.log("Recieved:", data);
-      client.emit("message", data)
+      // console.log("Recieved:", data);
+      client.emit("message", data);
     });
 
     return client;
   }
-
 
   startClient() {
     return this.#start();
