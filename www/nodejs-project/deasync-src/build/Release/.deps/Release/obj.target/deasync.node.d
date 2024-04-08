@@ -1,0 +1,1 @@
+cmd_Release/obj.target/deasync.node := aarch64-linux-android-clang++ -o Release/obj.target/deasync.node -shared -rdynamic -fPIC  -Wl,-soname=deasync.node -Wl,--start-group Release/obj.target/deasync/src/deasync.o -Wl,--end-group -llog
