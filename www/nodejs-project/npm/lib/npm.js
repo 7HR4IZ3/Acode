@@ -68,8 +68,9 @@ const _load = Symbol('_load')
 const _tmpFolder = Symbol('_tmpFolder')
 const _title = Symbol('_title')
 
-const npm = module.exports = new class extends EventEmitter {
-  constructor () {
+let npm;
+module.exports = class NPM extends EventEmitter {
+  constructor (config) {
     super()
     this.started = Date.now()
     this.command = null
@@ -85,9 +86,11 @@ const npm = module.exports = new class extends EventEmitter {
       definitions,
       flatten,
       shorthands,
+      ...config
     })
     this[_title] = process.title
-    this.updateNotification = null
+    this.updateNotification = null;
+    npm = this;
   }
 
   perfStart () {
@@ -354,7 +357,7 @@ const npm = module.exports = new class extends EventEmitter {
     console.log(...msg)
     this.log.showProgress()
   }
-}()
+}
 
 if (require.main === module)
   require('./cli.js')(process)

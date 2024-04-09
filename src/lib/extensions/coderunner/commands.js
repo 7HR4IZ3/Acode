@@ -31,6 +31,7 @@ export default [
   },
   {
     extension: "ml",
+    name: "Ocmal",
     command: "ocaml '$uri'"
   },
   {
@@ -40,18 +41,22 @@ export default [
   },
   {
     extension: "hx",
+    name: "Haxe",
     command: "haxe --cwd '$dirNoSlash' --run '$nameNoExt'"
   },
   {
     extension: "rkt",
+    name: "Racket",
     command: "racket '$uri'"
   },
   {
     extension: "scm",
+    name: "CSI",
     command: "csi -script '$uri'"
   },
   {
     extension: "ahk",
+    name: "Auto Hot Key",
     command: "autohotkey '$uri'"
   },
   {
@@ -75,14 +80,17 @@ export default [
   },
   {
     extension: "pas",
+    name: "Pascal",
     command: "fpc '$name' && '$dir$nameNoExt'"
   },
   {
     extension: "pp",
+    name: "Pascal",
     command: "fpc '$name' && '$dir$nameNoExt'"
   },
   {
     extension: "d",
+    name: "DMD",
     command: "dmd '$name' && '$dir$nameNoExt'"
   },
   {
@@ -107,14 +115,17 @@ export default [
   },
   {
     extension: "kit",
+    name: "Kit",
     command: "kitc --run"
   },
   {
     extension: "v",
+    name: "V Lang",
     command: "v run '$uri'"
   },
   {
     extension: "vsh",
+    name: "V Sh",
     command: "v run '$uri'"
   },
   {
@@ -124,14 +135,17 @@ export default [
   },
   {
     extension: "cu",
+    name: "NVCC",
     command: "nvcc '$name' -o '$nameNoExt' && '$dir$nameNoExt'"
   },
   {
     extension: "ring",
+    name: "Ring",
     command: "ring '$uri'"
   },
   {
     extension: "sml",
+    name: "SML",
     command: "sml '$uri'"
   },
   {
@@ -223,6 +237,7 @@ export default [
   },
   {
     extension: "hs",
+    name: "GHC",
     command: "ghc '$uri' -o '$nameNoExt' && ./'$nameNoExt'"
   },
   {
@@ -257,10 +272,6 @@ export default [
       "gcc -framework Foundation '$uri' -o '$nameNoExt' && ./'$nameNoExt'"
   },
   {
-    extension: "d",
-    command: "dmd '$uri' && ./'$nameNoExt'"
-  },
-  {
     extension: "groovy",
     name: "Groovy",
     command: "groovy '$uri'"
@@ -276,17 +287,8 @@ export default [
     command: "mysql -u username -p < '$uri'"
   },
   {
-    extension: "swift",
-    name: "Swift",
-    command: "swift '$uri'"
-  },
-  {
     extension: "matlab",
     name: "Matlab",
     command: "matlab -nodisplay -nosplash -r 'run('$uri');exit;'"
-  },
-  {
-    extension: "hs",
-    command: "ghc '$uri' -o '$nameNoExt' && ./'$nameNoExt'"
   }
 ];

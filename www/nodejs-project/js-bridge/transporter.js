@@ -1,6 +1,7 @@
 const { EventEmitter } = require("node:events");
 const { WebSocket, WebSocketServer } = require("ws");
 const { parse, stringify } = require("lossless-json");
+const { isProxy, getTarget } = require("./proxy.js");
 const {
   isRawObject,
   generateRandomID,
@@ -14,6 +15,9 @@ class BaseTransporterClient extends EventEmitter {
 
       let messageID = generateRandomID();
       this.once(messageID, data => {
+        if (data[isProxy] && data[getTarget].$$__obj_type__$$ === "awaitable") {
+          data[getTarget].$$__ignoreThen__$$ = true;
+        }
         resolve(data);
       });
 
@@ -145,7 +149,7 @@ class BaseTransporter extends EventEmitter {
     let DEBUG = this.getConfig("debug");
     let dataString = data.toString();
 
-    console.log("Handling:", dataString);
+    // console.log("\nHandling:", dataString);
 
     // Check if the data contains 'Content-Length'
     if (dataString.includes("Content-Length")) {
@@ -177,7 +181,7 @@ class BaseTransporter extends EventEmitter {
   }
 }
 
-class WebSocketClient extends EventEmitter {
+class WebSocketClient extends BaseTransporterClient {
   #prepare;
   #socket;
 
@@ -189,28 +193,8 @@ class WebSocketClient extends EventEmitter {
 
   send(message) {
     let cleaned = this.#prepare(message);
-    // console.log("Sending:", cleaned);
+    // console.log("\nSending:", cleaned);
     this.#socket.send(cleaned);
-  }
-
-  recieve(message) {
-    return new Promise((resolve, reject) => {
-      if (!message) return reject("Message cannot be nullish");
-
-      let messageID = generateRandomID();
-
-      // console.log("Send from:", message, messageID);
-      this.once(messageID, data => {
-        // console.log("Recieved from:", data, messageID);
-        resolve(data);
-      });
-
-      this.send({ messageID, message });
-    });
-  }
-
-  recieveSync(message) {
-    return evaluatePromiseSync(this.recieve(message));
   }
 }
 

@@ -155,7 +155,8 @@ export default function settingsPage(title, settings, callback, type = 'united')
      */
     setTitle(title) {
       $page.settitle(title);
-    }
+    },
+    hideSearchBar
   };
 }
 

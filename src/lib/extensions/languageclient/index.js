@@ -25,6 +25,8 @@ import {
 import { BaseService } from "./ace-linters/services/base-service";
 import { LanguageClient } from "./ace-linters/services/language-client";
 
+import appSettings from "lib/settings";
+
 /**
  * @typedef {object} EditorManager
  * @property {import("ace-code").Ace.Editor} editor
@@ -720,6 +722,81 @@ export class AcodeLanguageServerPlugin {
     };
   }
 
+  #languageServersSettings() {
+    const title = strings["language servers"] || "Langauge Servers";
+    const values = appSettings.value;
+    const { modes } = ace.require("ace/ext/modelist");
+
+    if (!this.settings.servers) {
+      values["languageclient"].servers = this.settings.servers = {};
+      appSettings.update();
+    }
+
+    const items = modes.map(mode => {
+      const { name, caption } = mode;
+      const server = appSettings.value["languageclient"].servers[name] || {
+        command: "", args: "", formatter: true
+      };
+
+      return {
+        key: name, text: caption,
+        icon: `file file_type_default file_type_${name}`,
+        value: `${server.command} ${server.args}`
+      };
+    });
+
+    const callback = key => {
+      this.#languageServerSettings(
+        modes.find(mode => mode.name === key)
+      );
+    };
+
+    const page = settingsPage(title, items, callback, "separate");
+    page.show();
+  }
+
+  #languageServerSettings({ name, caption }) {
+    const title =
+      `${caption[0].toUpperCase() + caption.slice(1)} Language Server`;
+    const server = appSettings.value["languageclient"].servers[name] || {
+      command: "", args: "", formatter: true
+    };
+    const items = [
+      {
+        index: 0,
+        key: "serverPath",
+        text: "Server command",
+        value: `${server.command} ${server.args}`,
+        prompt: "Server Command"
+      },
+      {
+        index: 1,
+        key: "formatter",
+        text: "Register formatter",
+        checkbox: !!server.formatter
+      }
+    ];
+
+    const callback = (key, value) => {
+      switch (key) {
+        case "serverPath":
+          const [command, ...extra] = value.trim().split(" ");
+          value = { ...server, command, args: extra.join(" ") };
+          break;
+        case "formatter":
+          value = { ...server, formatter: !!value };
+          break;
+        default:
+          return;
+      }
+      appSettings.value["languageclient"].servers[name] = value;
+      appSettings.update();
+    };
+
+    const page = settingsPage(title, items, callback, "separate");
+    page.show();
+  }
+
   #setServerInfo({ name, version }) {
     let node = this.$footer.querySelector(".server-info");
     node.innerHTML = `${name} (${version})`;
@@ -740,7 +817,7 @@ export class AcodeLanguageServerPlugin {
 
   log(message, type = "debug") {
     if (!this.$logger) {
-      this.$logger = window.acode?.require("acode.sdk")?.getLogger(plugin.id);
+      this.$logger = acode.require("acode.sdk")?.getLogger("languageclient");
       if (this.$logger) {
         this.$logs.map(i => this.$logger.info(i));
       }
@@ -982,14 +1059,13 @@ export class AcodeLanguageServerPlugin {
         timeout = setTimeout(async () => {
           await this.$buildBreadcrumbs();
           timeout = null;
-        }, 2000);
+        }, 300);
       };
 
       editor.on("change", this.$func);
-      editorManager.on("switch-file", async () =>
+      editorManager.on("switch-file", () =>
         setTimeout(
-          this.$buildBreadcrumbs.bind(this),
-          this.settings.breadcrumbTimeout
+          this.$buildBreadcrumbs.bind(this), 500
         )
       );
       this.$func();
@@ -1486,8 +1562,7 @@ export class AcodeLanguageServerPlugin {
 
       let tree =
         typeof symbols[0]?.children !== "undefined"
-          ? symbols
-          : createTreeObject(symbols);
+          ? symbols : createTreeObject(symbols);
       this.$breadcrumbsTree = tree;
       this.$breadcrumbsNode.style.display = "flex";
       this.$buildBreadcrumbsUi(tree);
@@ -1621,7 +1696,8 @@ export class AcodeLanguageServerPlugin {
 
       editor.scrollToLine(start.line - 10);
       editorManager.editor.session.selection.moveCursorTo(
-        start.line, start.character
+        start.line,
+        start.character
       );
 
       if (this.$currentRange !== undefined) {
@@ -1648,21 +1724,20 @@ export class AcodeLanguageServerPlugin {
       return this.defaultSettings;
     }
 
-    const AppSettings = acode.require("settings");
-    let value = AppSettings.value["languageclient"];
+    let value = appSettings.value["languageclient"];
     if (!value) {
-      value = AppSettings.value["languageclient"] = this.defaultSettings;
-      AppSettings.update();
+      value = appSettings.value["languageclient"] = this.defaultSettings;
+      appSettings.update();
     }
     return value;
   }
 
   get defaultSettings() {
     return {
+      servers: {},
       hover: true,
       format: true,
       completion: true,
-      // linter: LINTERS[0],
       completionResolve: true,
       replaceCompleters: true,
       codelens: true,
@@ -1678,6 +1753,12 @@ export class AcodeLanguageServerPlugin {
     const AppSettings = acode.require("settings");
     return {
       list: [
+        {
+          index: 0,
+          key: "languageServers",
+          text: "Language Servers",
+          info: "Language server config for each mode"
+        },
         {
           key: "closeTimeout",
           text: "Disconnect server timeout",
@@ -1748,6 +1829,9 @@ export class AcodeLanguageServerPlugin {
       ],
       cb: (key, value) => {
         switch (key) {
+          case "languageServers":
+            this.#languageServersSettings();
+            return;
           case "url":
             if (!value.endsWith("/")) {
               value = value + "/";
@@ -1768,7 +1852,7 @@ export class AcodeLanguageServerPlugin {
               "Settings updated. Restart acode app."
             );
         }
-        AppSettings.value[plugin.id][key] = value;
+        AppSettings.value["languageclient"][key] = value;
         AppSettings.update();
       }
     };

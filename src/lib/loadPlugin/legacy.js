@@ -36,6 +36,7 @@ export default async function loadPlugin(pluginId, justInstalled = false) {
         });
       } catch (error) {
         toast(`Error loading plugin ${pluginId}: ${error.message}`);
+        console.log(`Error loading plugin ${pluginId}: ${error.message}`);
       }
       resolve();
     };

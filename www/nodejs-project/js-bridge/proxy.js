@@ -1,3 +1,4 @@
+const util = require("util");
 const isProxy = Symbol("isProxy");
 const getTarget = Symbol("getTarget");
 const getCallstack = Symbol("getCallstack");
@@ -5,10 +6,25 @@ const getProxyData = Symbol("getProxyData");
 
 class BaseProxy {
   #target;
+  #intermediate;
 
   constructor(target) {
     this.#target = target;
-    return new Proxy(() => {}, this.#proxyHandlers);
+    this.#intermediate = () => {};
+
+    this.#intermediate.toString = () =>
+      this.#target.client.recieveSync({
+        action: "get_proxy_repr", string: true,
+        location: this.#target.$$__location__$$
+      });
+
+    this.#intermediate[util.inspect.custom] = () => 
+      this.#target.client.recieveSync({
+        action: "get_proxy_repr", string: false,
+        location: this.#target.$$__location__$$
+      });
+
+    return new Proxy(this.#intermediate, this.#proxyHandlers);
   }
 
   get #proxyHandlers() {
@@ -19,12 +35,17 @@ class BaseProxy {
         if (property === getTarget) return self.#target;
 
         if (property === "then") {
-          if (self.#target.$$__ignoreThen__$$) return undefined;
+          if (self.#target.$$__ignoreThen__$$) {
+            self.#target.$$__ignoreThen__$$ = false;
+            return undefined;
+          }
+
           if (self.#target.$$__obj_type__$$ === "awaitable") {
             return (resolve, reject) => {
               try {
                 const next = self.#target.client.recieveSync({
-                  target: property, action: "await_proxy",
+                  target: property,
+                  action: "await_proxy",
                   location: self.#target.$$__location__$$
                 });
                 if (
@@ -343,7 +364,7 @@ class ChainProxy extends Function {
           // }
 
           self.#target.client
-            .recieveSync({
+            .recieve({
               action: "call_proxy",
               stack: self.#callstack,
               location: self.#target.$$__location__$$,

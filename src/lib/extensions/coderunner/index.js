@@ -460,6 +460,31 @@ class CodeRunner {
     });
   }
 
+  #commandsSettings() {
+    const title = strings.formatter;
+  
+    const items = this.commands.map((item) => {
+      if (item.project || !item.name) return;
+
+      const { name, extension, command, icon } = item;
+
+      return {
+        key: name, text: `${name} (*.${extension})`,
+        icon: icon || `file file_type_default file_type_${name.toLowerCase()}`,
+        value: command, prompt: `Command for ${name}`, promptType: "text"
+      };
+    }).filter(Boolean);
+  
+    const page = settingsPage(title, items, callback, 'separate');
+    page.show();
+  
+    const callback = (key, value) => {
+      const target = this.commands.find(item => (item.name === name));
+      if (target) (target.command = value);
+      appSettings.update();
+    }
+  }
+
   get logger() {
     if (this.#logger) return this.#logger;
 
@@ -811,6 +836,11 @@ class CodeRunner {
       list: [
         {
           index: 0,
+          key: "commands",
+          text: "Commands"
+        },
+        {
+          index: 1,
           key: "changeDirectory",
           text: "Change Directory",
           info: "Change the current directory before running.",
@@ -847,6 +877,8 @@ class CodeRunner {
         }
       ],
       cb: (key, value) => {
+        if (key === "commands")
+          return this.#commandsSettings();
         this.settings[key] = value;
         appSettings.update();
       }

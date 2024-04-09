@@ -13,7 +13,14 @@ const {
   BridgeTransporter
 } = require("js-bridge");
 const util = require("node:util");
-const npm = require("../npm");
+const NPM = require("../npm");
+
+const npm = new NPM({
+  env: {
+    HOME: __dirname,
+    PREFIX: __dirname
+  }
+});
 
 channel.post("server:started", {});
 
@@ -27,9 +34,6 @@ for (let name of ["log", "info", "debug", "warn"]) {
     };
   }
 }
-
-npm.load().then(() => channel.post("npm:loaded", {}));
-
 
 // Forward process events to Acode
 process.on("uncaughtException", function (err) {
@@ -49,6 +53,11 @@ process.stderr.on("data", data =>
 );
 
 process.on("warning", data => channel.post("process:warning", data));
+
+npm.load().then(() => {
+  channel.post("npm:loaded", {});
+  npm.config.set("prefix", process.cwd());
+});
 
 // Acode Events
 channel.on("acode:exec", (code, context) => {
@@ -97,6 +106,34 @@ async function loadPlugin({ plugin, pluginID, justInstalled }) {
     });
   }
 }
+
+
+// NPM handlers
+const npmChannel = createChannel("acode-npm");
+
+npmChannel.on("config", (messageID, config) => {
+  try {
+    for (const key in config) {
+      npm.config.set(key, config[key]);
+    }
+  } catch (err) {
+    npmChannel.post(messageID, { error: err });
+  }
+});
+
+npmChannel.on("install", (messageID, { global, dev, packages }) => {
+  npm.config.set("dev", dev);
+  npm.config.set("global", global);
+
+  try {
+    npm.commands.install(packages, err => {
+      npmChannel.post(messageID, { error: err });
+    });
+  } catch (err) {
+    npmChannel.post(messageID, { error: err });
+  }
+})
+
 
 // Acode to NodeJS bridge
 const bridgeChannel = createChannel("acode-bridge");

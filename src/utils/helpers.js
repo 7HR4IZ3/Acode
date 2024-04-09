@@ -161,6 +161,7 @@ export default {
    * @returns {PromiseLike<void>}
    */
   error(err, ...args) {
+    console.log(err);
     if (err.code === 0) {
       toast(err);
       return;
@@ -314,7 +315,8 @@ export default {
   async toInternalUri(uri) {
     return new Promise((resolve, reject) => {
       window.resolveLocalFileSystemURL(uri, (entry) => {
-        resolve(entry.toInternalURL());
+        const result = entry.toInternalURL();
+        resolve(result.replace(":8080", ""));
       }, reject);
     });
   },

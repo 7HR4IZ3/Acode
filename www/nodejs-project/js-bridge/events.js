@@ -12,7 +12,7 @@ class BaseEventHandler {
     if (!callback) return false;
 
     try {
-      if (action === "action:await_proxy") {
+      if (action === "await_proxy") {
         respond(await callback.call(this, data));
       } else {
         respond(callback.call(this, data));

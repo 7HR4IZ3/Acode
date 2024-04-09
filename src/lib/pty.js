@@ -243,8 +243,7 @@ export class PtyHost {
     // Kill server on app exit
     window.addEventListener("unload", () => {
       fetch(`http://localhost:${this.#serverPort}/kill-server`, {
-        method: "POST",
-        body: "{}"
+        method: "POST", body: "{}"
       });
     });
   }
@@ -254,8 +253,7 @@ export class PtyHost {
 
     // try {
     response = await runCommand("whereis", [command], {
-      background: true,
-      sessionAction: 3
+      background: true, sessionAction: 3
     });
     // } catch (error) {
 
@@ -285,8 +283,7 @@ export class PtyHost {
 
     try {
       await runCommand("npm", ["install", "-g", this.#serverLibrary[0]], {
-        background: false,
-        sessionAction: 0
+        background: false, sessionAction: 0
       });
       installLoader.setMessage("Server sucessfully installed");
     } catch (error) {
@@ -379,8 +376,7 @@ export class PtyHost {
           command,
           args: args || [],
           type: type || "pty",
-          cwd,
-          env
+          cwd, env
         })
       });
     } catch (err) {

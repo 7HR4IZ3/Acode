@@ -142,8 +142,6 @@ async function EditorManager($header, $body, $isMainEditor = false) {
       $container.remove();
       $body.remove();
 
-      console.log(window.editorManager, manager)
-
       window.editorManager = window.EDITOR_MANAGERS[0];
       window.editorManager.switchTo();
     }

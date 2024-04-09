@@ -57,6 +57,7 @@ import {
 } from "browser-bridge";
 
 export default class Acode {
+  #npm = null;
   #nodejs = null;
   #connections = null;
   #nodejsInitialized = false;
@@ -119,6 +120,8 @@ export default class Acode {
 
     this.#nodejs = window.nodejs;
     delete window.nodejs;
+
+    this.#npm = this.#nodejs.createChannel("acode-npm");
 
     const bridgeChannel = this.#nodejs.createChannel("acode-bridge");
     const transporter = new BridgeTransporter(bridgeChannel);
@@ -216,10 +219,6 @@ export default class Acode {
       this.#nodejs.channel.once("acode:pong", () => {
         clearTimeout(timeout); resolve(true);
       });
-      // Remove next build (fixed in backend)
-      this.#nodejs.channel.once("pong", () => {
-        clearTimeout(timeout); resolve(true);
-      });
 
       this.#nodejs.channel.post("acode:ping");
 
@@ -241,6 +240,7 @@ export default class Acode {
     return this.#nodejs;
   }
 
+  get npm() { return this.#npm }
   get connections() { return this.#connections }
 
   /**
