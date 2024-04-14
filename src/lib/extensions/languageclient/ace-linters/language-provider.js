@@ -160,7 +160,9 @@ export class LanguageProvider {
 
 .ace_tooltip {
   opacity: 7;
-  background-color: rgba(53,53,53,0.688) !important;
+  border: 1px solid var(--popup-border-color) !important;
+  color: var(--popup-text-color) !important;
+  background-color: var(--popup-background-color) !important;
 }
 
 .ace_tooltip code {
@@ -192,13 +194,10 @@ export class LanguageProvider {
 .language_highlight_text, .language_highlight_read, .language_highlight_write {
     position: absolute;
     box-sizing: border-box;
-    border: solid 1px #888;
+    border: solid 1px var(--popup-border-color);
     z-index: 2000;
 }
-
-.language_highlight_write {
-    border: solid 1px #F88;
-}`, "linters.css");
+`, "linters.css");
     }
     setSessionOptions(session, options) {
         let sessionLanguageProvider = this.$getSessionLanguageProvider(session);

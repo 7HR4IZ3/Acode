@@ -2,6 +2,7 @@ import list from "components/collapsableList";
 import ScrollBar from "components/scrollbar";
 import touchListeners from "ace/touchHandler";
 import appSettings from "./settings";
+import EditorView from "./editorView";
 import EditorFile from "./editorFile";
 import sidebarApps from "sidebarApps";
 import quickTools from "components/quickTools";
@@ -77,10 +78,11 @@ async function EditorManager($header, $body, $isMainEditor = false) {
   });
   const manager = {
     id: EDITOR_ID++,
-    files: [],
+    views: [],
     onupdate: () => {},
     activeFile: null,
     addFile, editor, getFile,
+    addView, getView, switchView,
     switchFile, hasUnsavedFiles,
     getEditorHeight,
     getEditorWidth,
@@ -88,6 +90,20 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     isMain: $isMainEditor,
     container: $container,
     switchTo: () => switchManager(),
+    get files() {
+      return manager.views.filter(
+        view => (view instanceof EditorFile)
+      )
+    },
+    set files(files) {
+      const views = manager.views.filter(
+        view => (
+          view && view instanceof EditorView &&
+          view?.constructor.name === "EditorView"
+        )
+      );
+      manager.views = [...files, ...views];
+    },
     get isScrolling() {
       return isScrolling;
     },
@@ -266,6 +282,14 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     manager.openFileList.append(file.tab);
     file.editorManager = manager;
     $header.text = file.name;
+  }
+  
+  function addView(view) {
+    if (manager.views.includes(view)) return;
+    manager.views.push(view);
+    manager.openFileList.append(view.tab);
+    view.editorManager = manager;
+    $header.text = view.name;
   }
 
   function switchManager() {
@@ -626,6 +650,10 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     manager.onupdate("switch-file");
     events.emit("switch-file", file);
   }
+  
+  function switchView(id) {
+    switchFile(id);
+  }
 
   function initFileTabContainer() {
     let $list;
@@ -699,14 +727,26 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     return manager.files.find(file => {
       switch (type) {
         case "id":
-          if (file.id === checkFor) return true;
-          return false;
+          return (file.id === checkFor);
         case "name":
-          if (file.filename === checkFor) return true;
-          return false;
+          return (file.name === checkFor);
         case "uri":
-          if (file.uri === checkFor) return true;
+          return (file.uri === checkFor);
+        default:
           return false;
+      }
+    });
+  }
+
+  function getView(checkFor, type="id") {
+    return manager.views.find(file => {
+      switch (type) {
+        case "id":
+          return (file.id === checkFor);
+        case "name":
+          return (file.name === checkFor);
+        case "uri":
+          return (file.uri === checkFor);
         default:
           return false;
       }

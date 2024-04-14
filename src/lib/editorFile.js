@@ -10,8 +10,9 @@ import openFolder from "./openFolder";
 import appSettings from './settings';
 import tile from "components/tile";
 import Sidebar from 'components/sidebar';
-import startDrag from 'handlers/editorFileTab';
 import confirm from 'dialogs/confirm';
+
+import EditorView, { id, name } from "./editorView";
 
 const { Fold } = ace.require('ace/edit_session/fold');
 const { Range } = ace.require('ace/range');
@@ -37,7 +38,7 @@ const { Range } = ace.require('ace/range');
  * @property {Array<Fold>} [folds] folds
  */
 
-export default class EditorFile {
+export default class EditorFile extends EditorView {
   /**
    * If editor was focused before resize
    */
@@ -87,26 +88,10 @@ export default class EditorFile {
    */
   #SAFMode = null;
   /**
-   * Name of the file
-   * @type {string}
-   */
-  #name = constants.DEFAULT_FILE_NAME;
-  /**
    * Location of the file
    * @type {string}
    */
   #uri;
-  /**
-   * Unique ID of the file, changed when file is renamed or location/uri is changed.
-   * @type {string}
-   */
-  #id = constants.DEFAULT_FILE_SESSION;
-  /**
-   * Associated tile for the file, that is append in the open file list,
-   * when clicked make the file active.
-   * @type {HTMLElement}
-   */
-  #tab;
   /**
    * Weather file can be edited or not
    * @type {boolean}
@@ -125,10 +110,6 @@ export default class EditorFile {
    * Whether to show run button or not
    */
   #canRun = Promise.resolve(false);
-  /**
-   * @type {function} event handler
-   */
-  #onFilePosChange;
   #events = {
     save: [],
     change: [],
@@ -144,7 +125,6 @@ export default class EditorFile {
     run: [],
     canrun: [],
   };
-  #editorManager;
 
   onsave;
   onchange;
@@ -166,48 +146,22 @@ export default class EditorFile {
    * @param {FileOptions} [options]  file create options
    */
   constructor(filename, options, editorManager) {
-    this.#editorManager = editorManager || window.editorManager;
+    super(filename || "untitled", options, editorManager);
 
-    const {
-      addFile,
-      getFile,
-    } = this.#editorManager;
     let doesExists = null;
-
-    // if options are passed
-    if (options) {
-      // if options doesn't contains id, and provide a new id
-      if (!options.id) {
-        if (options.uri) this.#id = options.uri.hashCode();
-        else this.#id = helpers.uuid();
-      } else this.#id = options.id;
-    } else if (!options) {
-      // if options aren't passed, that means default file is being created
-      this.#id = constants.DEFAULT_FILE_SESSION;
-    }
-
     this.#uri = options?.uri;
 
-    if (this.#id) doesExists = getFile(this.#id, 'id');
-    else if (this.#uri) doesExists = getFile(this.#uri, 'uri');
+    if (this.#uri)
+      doesExists = this.editorManager.getFile(
+        this.#uri, 'uri'
+      );
 
     if (doesExists) {
       doesExists.makeActive();
-      return;
+      return doesExists;
     }
 
-    if (filename) this.#name = filename;
-
-    this.#tab = tile({
-      text: this.#name,
-      tail: tag('span', {
-        className: 'icon cancel',
-        dataset: {
-          action: 'close-file'
-        },
-      }),
-    });
-    this.#tab.file = this;
+    this.tab.file = this;
 
     const editable = options?.editable ?? true;
 
@@ -221,7 +175,7 @@ export default class EditorFile {
     // if options contains text property then there is no need to load
     // set loaded true
 
-    if (this.#id !== constants.DEFAULT_FILE_SESSION) {
+    if (this.id !== constants.DEFAULT_FILE_SESSION) {
       this.loaded = options?.text !== undefined;
     }
 
@@ -238,24 +192,7 @@ export default class EditorFile {
       this.editable = editable;
     }
 
-    this.#onFilePosChange = () => {
-      const { openFileListPos } = appSettings.value;
-      if (
-        openFileListPos === appSettings.OPEN_FILE_LIST_POS_HEADER ||
-        openFileListPos === appSettings.OPEN_FILE_LIST_POS_BOTTOM
-      ) {
-        this.#tab.oncontextmenu = startDrag;
-      } else {
-        this.#tab.oncontextmenu = null;
-      }
-    };
-
-    this.#onFilePosChange();
-    this.#tab.addEventListener('click', tabOnclick.bind(this));
-    appSettings.on('update:openFileListPos', this.#onFilePosChange);
-
-    addFile(this);
-    this.#editorManager.emit('new-file', this);
+    this.editorManager.emit('new-file', this);
     this.session = ace.createEditSession(options?.text || '');
     this.setMode();
     this.#setupSession();
@@ -263,49 +200,11 @@ export default class EditorFile {
     if (options?.render ?? true) this.render();
   }
 
-  get editorManager() {
-    return this.#editorManager;
-  }
-
-  set editorManager(manager) {
-    if (this.#editorManager === manager) return;
-
-    if (this.#editorManager.activeFile === this) {
-      this.#editorManager.files.at(-1)?.makeActive();
-    }
-
-    this.tab.remove();
-    this.#editorManager.files = this.#editorManager.files.filter(
-      item => item !== this
-    )
-
-    this.#editorManager = manager;
-    this.#editorManager.addFile(this);
-    this.#editorManager.openFileList.append(this.tab);
-    this.makeActive();
-  }
-
-  /**
-   * File unique id.
-   */
-  get id() {
-    return this.#id;
-  }
-
-  /**
-  * File unique id.
-  * @param {string} value
-  */
-  set id(value) {
-    this.#renameCacheFile(value);
-    this.#id = value;
-  }
-
   /**
    * File name
    */
   get filename() {
-    return this.#name;
+    return this.name;
   }
 
   /**
@@ -314,7 +213,7 @@ export default class EditorFile {
    */
   set filename(value) {
     if (!value || this.#SAFMode === 'single') return;
-    if (this.#name === value) return;
+    if (this[name] === value) return;
 
     const event = createFileEvent(this);
     this.#emit('rename', event);
@@ -323,23 +222,23 @@ export default class EditorFile {
 
     (async () => {
       if (this.id === constants.DEFAULT_FILE_SESSION) {
-        this.id = helpers.uuid();
+        this[id] = helpers.uuid();
       }
 
-      if (this.#editorManager.activeFile.id === this.id) {
-        this.#editorManager.header.text = value;
+      if (this.editorManager.activeFile.id === this.id) {
+        this.editorManager.header.text = value;
       }
 
-      // const oldExt = helpers.extname(this.#name);
-      const oldExt = Url.extname(this.#name);
+      // const oldExt = helpers.extname(this.name);
+      const oldExt = Url.extname(this.name);
       // const newExt = helpers.extname(value);
       const newExt = Url.extname(value);
 
-      this.#tab.text = value;
-      this.#name = value;
+      this.tab.text = value;
+      this[name] = value;
 
-      this.#editorManager.onupdate('rename-file');
-      this.#editorManager.emit('rename-file', this);
+      this.editorManager.onupdate('rename-file');
+      this.editorManager.emit('rename-file', this);
 
       if (oldExt !== newExt) this.setMode();
     })();
@@ -394,20 +293,20 @@ export default class EditorFile {
       this.deletedFile = true;
       this.isUnsaved = true;
       this.#uri = null;
-      this.id = helpers.uuid();
+      this[id] = helpers.uuid();
     } else {
       this.#uri = value;
       this.deletedFile = false;
       this.readOnly = false;
-      this.id = value.hashCode();
+      this[id] = value.hashCode();
     }
 
-    this.#editorManager.onupdate('rename-file');
-    this.#editorManager.emit('rename-file', this);
+    this.editorManager.onupdate('rename-file');
+    this.editorManager.emit('rename-file', this);
 
     // if this file is active set sub text of header
-    if (this.#editorManager.activeFile.id === this.id) {
-      this.#editorManager.header.subText = this.#getTitle();
+    if (this.editorManager.activeFile.id === this.id) {
+      this.editorManager.header.subText = this.#getTitle();
     }
   }
 
@@ -448,9 +347,9 @@ export default class EditorFile {
    */
   set editable(value) {
     if (this.#editable === value) return;
-    this.#editorManager.editor.setReadOnly(!value);
-    this.#editorManager.onupdate('read-only');
-    this.#editorManager.emit('update', 'read-only');
+    this.editorManager.editor.setReadOnly(!value);
+    this.editorManager.onupdate('read-only');
+    this.editorManager.emit('update', 'read-only');
     this.#editable = value;
   }
 
@@ -466,17 +365,10 @@ export default class EditorFile {
   }
 
   /**
-   * DON'T remove, plugin need this property to get filename.
-   */
-  get name() {
-    return this.#name;
-  }
-
-  /**
    * Readonly, cache file url
    */
   get cacheFile() {
-    return Url.join(CACHE_STORAGE, this.#id);
+    return Url.join(CACHE_STORAGE, this.id);
   }
 
   /**
@@ -484,10 +376,6 @@ export default class EditorFile {
    */
   get icon() {
     return helpers.getIconForFile(this.filename);
-  }
-
-  get tab() {
-    return this.#tab;
   }
 
   get SAFMode() {
@@ -523,7 +411,7 @@ export default class EditorFile {
       // if file is default file and text is changed
       if (this.id === constants.DEFAULT_FILE_SESSION) {
         // change id when text is changed
-        this.id = helpers.uuid();
+        this[id] = helpers.uuid();
       }
       return true;
     }
@@ -607,7 +495,7 @@ export default class EditorFile {
    * @param {boolean} force if true, will prompt to save the file
    */
   async remove(force = false) {
-    if (this.id === constants.DEFAULT_FILE_SESSION && !this.#editorManager.files.length) return;
+    if (this.id === constants.DEFAULT_FILE_SESSION && !this.editorManager.files.length) return;
     if (!force && this.isUnsaved) {
       const confirmation = await confirm(strings.warning.toUpperCase(), strings['unsaved file']);
       if (!confirmation) return;
@@ -615,26 +503,30 @@ export default class EditorFile {
 
     this.#destroy();
 
-    this.#editorManager.files = this.#editorManager.files.filter((file) => file.id !== this.id);
-    const { files, activeFile } = this.#editorManager;
+    this.editorManager.files = this.editorManager.files.filter((file) => file.id !== this.id);
+    const { files, activeFile } = this.editorManager;
     if (activeFile.id === this.id) {
-      this.#editorManager.activeFile = null;
+      this.editorManager.activeFile = null;
     }
     if (!files.length) {
       Sidebar.hide();
-      this.#editorManager.activeFile = null;
-      if (this.#editorManager.isMain) {
+      this.editorManager.activeFile = null;
+      if (this.editorManager.isMain) {
         new EditorFile();
       } else {
-        this.#editorManager.onupdate('remove-file');
-        this.#editorManager.emit('remove-file', this);
-        return this.#editorManager.destroy();
+        this.editorManager.onupdate('remove-file');
+        this.editorManager.emit('remove-file', this);
+        return this.editorManager.destroy();
       }
     } else {
       files[files.length - 1].makeActive();
     }
-    this.#editorManager.onupdate('remove-file');
-    this.#editorManager.emit('remove-file', this);
+    this.editorManager.onupdate('remove-file');
+    this.editorManager.emit('remove-file', this);
+  }
+
+  onSetId(value) {
+    this.#renameCacheFile(value);
   }
 
   /**
@@ -677,7 +569,7 @@ export default class EditorFile {
     this.session.setMode(mode);
 
     // sets file icon
-    this.#tab.lead(
+    this.tab.lead(
       <span className={this.icon} style={{ paddingRight: '5px' }}></span>
     );
   }
@@ -686,31 +578,20 @@ export default class EditorFile {
    * Makes this file active
    */
   makeActive() {
-    const { activeFile, editor, switchFile } = this.#editorManager;
+    super.makeActive();
 
-
-    if (activeFile) {
-      if (activeFile.id === this.id) return;
-      activeFile.focusedBefore = activeFile.focused;
-      activeFile.removeActive();
-    }
-
-    switchFile(this.id);
-
+    const { editor, header } = this.editorManager;
     if (this.focused) {
       editor.focus();
     } else {
       editor.blur();
     }
 
-    this.#tab.classList.add('active');
-    this.#tab.scrollIntoView();
     if (!this.loaded && !this.loading) {
       this.#loadText();
     }
 
-    this.#editorManager.header.subText = this.#getTitle();
-
+    header.subText = this.#getTitle();
     this.#emit('focus', createFileEvent(this));
   }
 
@@ -746,7 +627,7 @@ export default class EditorFile {
     this.makeActive();
 
     if (this.id !== constants.DEFAULT_FILE_SESSION) {
-      const defaultFile = this.#editorManager.getFile(constants.DEFAULT_FILE_SESSION, 'id');
+      const defaultFile = this.editorManager.getFile(constants.DEFAULT_FILE_SESSION, 'id');
       defaultFile?.remove();
     }
   }
@@ -834,7 +715,7 @@ export default class EditorFile {
       folds,
       editable,
     } = this.#loadOptions;
-    const { editor } = this.#editorManager;
+    const { editor } = this.editorManager;
 
     this.#loadOptions = null;
 
@@ -870,7 +751,7 @@ export default class EditorFile {
       this.loaded = true;
       this.loading = false;
 
-      const { activeFile, emit } = this.#editorManager;
+      const { activeFile, emit } = this.editorManager;
       if (activeFile.id === this.id) {
         editor.setReadOnly(false);
       }
@@ -982,21 +863,19 @@ export default class EditorFile {
     this.session.on('changeScrollLeft', EditorFile.#onscrollleft);
     this.session.on('changeFold', EditorFile.#onfold);
     this.session.on('changeAnnotation', () => {
-      this.#editorManager.editor._emit('changeAnnotation', this);
+      this.editorManager.editor._emit('changeAnnotation', this);
     });
   }
 
   #destroy() {
     this.#emit('close', createFileEvent(this));
-    appSettings.off('update:openFileListPos', this.#onFilePosChange);
     this.session.off('changeScrollTop', EditorFile.#onscrolltop);
     this.session.off('changeScrollLeft', EditorFile.#onscrollleft);
     this.session.off('changeFold', EditorFile.#onfold);
     this.#removeCache();
     this.session.destroy();
-    this.#tab.remove();
     delete this.session;
-    this.#tab = null;
+    super.destroy();
   }
 
   #showNoAppError() {
@@ -1034,21 +913,6 @@ export default class EditorFile {
       return !event.BUBBLING_PHASE;
     });
   }
-}
-
-/**
- * 
- * @param {MouseEvent} e 
- * @returns 
- */
-function tabOnclick(e) {
-  e.preventDefault();
-  const { action } = e.target.dataset;
-  if (action === 'close-file') {
-    this.remove();
-    return;
-  }
-  this.makeActive();
 }
 
 function createFileEvent(file) {

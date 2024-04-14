@@ -68,7 +68,6 @@ channel.on("acode:require", (file) => require(file));
 channel.on("acode:ping", () => channel.post("acode:pong", {}));
 channel.on("acode:exit", () => process.exit());
 
-channel.on("acode:initialize", initialize);
 channel.on("acode:loadPlugin", loadPlugin);
 channel.on("acode:loadPlugins", loadPlugins);
 
@@ -85,13 +84,8 @@ channel.on("acode:npm", ({ command, argv }) => {
   });
 });
 
+
 // Acode Event Listeners
-async function initialize(config) {
-  CONFIG = {
-    ...CONFIG,
-    ...config
-  };
-}
 
 async function loadPlugins() {}
 

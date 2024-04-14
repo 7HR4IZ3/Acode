@@ -142,7 +142,8 @@ export default class Acode {
     
     for (let name of ["log", "info", "debug", "warn"]) {
       this.#nodejs.channel.on(
-        "process:" + name, data => console[name](data)
+        "process:" + name,
+        data => console[name](data, data.length)
       );
     }
 
@@ -240,8 +241,29 @@ export default class Acode {
     return this.#nodejs;
   }
 
-  get npm() { return this.#npm }
+  get npm() {
+    const self = this;
+    return {
+      async config(config = {}) {
+        const result = await self.#npm.recieve("config", config);
+        if (result.err) throw result.err;
+        return true;
+      },
+      async install(packages, { global=false, dev=false, directory } = {}) {
+        directory && self.exec(`process.chdir("${directory}")`);
+        const result = await self.#npm.recieve("install", {
+          packages, dev, global
+        });
+        if (result.err) throw new Error(result.err);
+        return true
+      }
+    }
+  }
   get connections() { return this.#connections }
+
+  execute(code) {
+    this.#nodejs.channel.post("acode:exec", code);
+  }
 
   /**
    * Define a module
