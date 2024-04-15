@@ -745,8 +745,6 @@ async function EditorManager($header, $body, $isMainEditor = false) {
           return (file.id === checkFor);
         case "name":
           return (file.name === checkFor);
-        case "uri":
-          return (file.uri === checkFor);
         default:
           return false;
       }

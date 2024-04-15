@@ -151,10 +151,17 @@ export class AcodeLanguageServerPlugin {
     this.$page = new Page("References");
     this.$tree = new Page("File Structure");
 
-    this.$treeBtn = sideButton("Structure", "edit", () => {
-      this.$tree.innerHTML = "";
-      this.$tree.appendChild(this.$breadcrumbsNode.cloneNode(true));
-      this.$tree.show();
+    this.$treeBtn = sideButton({
+      bottom: true,
+      text: "Structure",
+      icon: "edit",
+      onclick: () => {
+        this.$tree.innerHTML = "";
+        this.$tree.appendChild(
+          this.$breadcrumbsNode.cloneNode(true)
+        );
+        this.$tree.show();
+      }
     });
 
     this.$logs = [];
@@ -428,6 +435,7 @@ export class AcodeLanguageServerPlugin {
               client.connection.onNotification(
                 "$/typescriptVersion",
                 params => {
+                  this.$buildBreadcrumbs();
                   let serverInfo = {
                     name: "typescript",
                     version: params.version
@@ -503,6 +511,7 @@ export class AcodeLanguageServerPlugin {
 
     providerTarget.addEventListener("initialized", ({ detail }) => {
       // console.log("Initialized:", detail);
+      this.$buildBreadcrumbs();
       let mode =
         detail.lsp.serviceData.options?.alias ||
         detail.lsp.serviceData.modes.split("|")[0];
@@ -735,20 +744,21 @@ export class AcodeLanguageServerPlugin {
     const items = modes.map(mode => {
       const { name, caption } = mode;
       const server = appSettings.value["languageclient"].servers[name] || {
-        command: "", args: "", formatter: true
+        command: "",
+        args: "",
+        formatter: true
       };
 
       return {
-        key: name, text: caption,
+        key: name,
+        text: caption,
         icon: `file file_type_default file_type_${name}`,
         value: `${server.command} ${server.args}`
       };
     });
 
     const callback = key => {
-      this.#languageServerSettings(
-        modes.find(mode => mode.name === key)
-      );
+      this.#languageServerSettings(modes.find(mode => mode.name === key));
     };
 
     const page = settingsPage(title, items, callback, "separate");
@@ -756,10 +766,13 @@ export class AcodeLanguageServerPlugin {
   }
 
   #languageServerSettings({ name, caption }) {
-    const title =
-      `${caption[0].toUpperCase() + caption.slice(1)} Language Server`;
+    const title = `${
+      caption[0].toUpperCase() + caption.slice(1)
+    } Language Server`;
     const server = appSettings.value["languageclient"].servers[name] || {
-      command: "", args: "", formatter: true
+      command: "",
+      args: "",
+      formatter: true
     };
     const items = [
       {
@@ -1059,14 +1072,12 @@ export class AcodeLanguageServerPlugin {
         timeout = setTimeout(async () => {
           await this.$buildBreadcrumbs();
           timeout = null;
-        }, 300);
+        }, 500);
       };
 
       editor.on("change", this.$func);
       editorManager.on("switch-file", () =>
-        setTimeout(
-          this.$buildBreadcrumbs.bind(this), 500
-        )
+        setTimeout(this.$buildBreadcrumbs.bind(this), 0)
       );
       this.$func();
     }
@@ -1518,6 +1529,7 @@ export class AcodeLanguageServerPlugin {
     let symbols = await this.getDocumentSymbols();
 
     if (!symbols?.length) {
+      this.$treeBtn?.hide();
       this.$breadcrumbsNode.style.display = "none";
     } else if (symbols !== this.$currentSymbols) {
       this.$currentSymbols = symbols;
@@ -1562,10 +1574,12 @@ export class AcodeLanguageServerPlugin {
 
       let tree =
         typeof symbols[0]?.children !== "undefined"
-          ? symbols : createTreeObject(symbols);
+          ? symbols
+          : createTreeObject(symbols);
       this.$breadcrumbsTree = tree;
       this.$breadcrumbsNode.style.display = "flex";
       this.$buildBreadcrumbsUi(tree);
+      this.$treeBtn.show();
       return true;
     }
     return false;

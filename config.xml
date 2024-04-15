@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget android-versionCode="944" id="com.foxdebug.acodenode" version="1.10.0" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.foxdebug.acodenode" android-versionCode="944" version="1.10.0" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
   <name>Acode</name>
   <description>
     Light weight code editor and web IDE for android.
@@ -7,8 +7,8 @@
   <author email="ajit@foxdebug.com" href="https://foxdebug.com">
     Foxdebug
   </author>
-  <!--<content src="index.html" />-->
-  <content src="http://localhost:8080/" />
+  <content src="index.html" />
+  <!--<content src="http://localhost:8080/" />-->
   <access launch-external="yes" origin="*" />
   <allow-navigation href="https://*/*" />
   <allow-navigation href="http://*/*" />

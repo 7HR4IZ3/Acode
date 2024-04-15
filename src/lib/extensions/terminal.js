@@ -7,6 +7,7 @@ import fs from "../../fileSystem";
 import appSettings from "../settings";
 import openFolder from "../openFolder";
 import actionStack from "../actionStack";
+import Browser from "plugins/browser";
 import Page from "../../components/page";
 import sideButton from "../../components/sideButton";
 import contextmenu from "../../components/contextmenu";
@@ -1336,7 +1337,7 @@ export class AcodeTerminal {
     this.#term.loadAddon(
       new WebLinksAddon(async (ev, url) => {
         if (await acode.confirm("Go To Link", `Open in browser: '${url}'?`)) {
-          system.openInBrowser(url);
+          Browser.open(url);
         }
       })
     );
@@ -1786,7 +1787,7 @@ class AcodeTerminalPlugin {
       this.sBtn = sideButton({
         bottom: false,
         text: "Terminal",
-        icon: "settings",
+        icon: "android-full",
         onclick: this.#togglePage.bind(this),
         backgroundColor: "#656c76fd",
         textColor: "white"

@@ -1,3 +1,4 @@
+
 export default async function () {
   try {
     acode.setLoadingMessage("Loading terminal...");
@@ -26,6 +27,13 @@ export default async function () {
   try {
     const manager = await import("lib/extensions/workspace");
     await manager.default.initialize();
+  } catch (err) {
+    console.error(err);
+  }
+
+  try {
+    const browser = await import("lib/extensions/browser");
+    await browser.default.initialize();
   } catch (err) {
     console.error(err);
   }

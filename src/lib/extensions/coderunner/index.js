@@ -184,6 +184,8 @@ function splitCommand(command) {
   return out;
 }
 
+let originalRun, originalRunFile;
+
 class CodeRunner {
   #logger = null;
 
@@ -191,19 +193,19 @@ class CodeRunner {
   #commandsUrl;
 
   #projectCommands = [
-    // {
-    //   name: "Built In Runner",
-    //   icon: "play_arrow",
-    //   project: true,
-    //   match: file => file.canRun(),
-    //   handler: (file, { contextMenu }) =>
-    //     contextMenu ? file.runFile() : file.run()
-    // }
+    {
+      name: "Built In Runner",
+      icon: "play_arrow",
+      project: true,
+      match: file => (["html", "js"]).includes(Url.extname(file.name)),
+      handler: function(file, { contextMenu }) {
+        contextMenu ? originalRunFile(): originalRun()
+      }
+    }
   ];
 
   async initialize() {
-    let self = this,
-      data;
+    let self = this, data;
     this.$page = new Page("Outputs");
     this.$page.show = () => {
       actionStack.push({
@@ -364,6 +366,9 @@ class CodeRunner {
     });
 
     // Override the default run function
+    originalRun = acodeCommands["run"];
+    originalRunFile = acodeCommands["run-file"];
+
     acodeCommands["run"] = () => this.run();
     acodeCommands["run-file"] = () => this.run(true);
 

@@ -4,13 +4,25 @@ import themes from 'theme/list';
 const SERVICE = 'Browser';
 
 function open(url, isConsole = false) {
-  const ACTION = 'open';
+  const ACTION = url ? 'open' : 'show';
   const success = () => { };
   const error = () => { };
   const theme = themes.get(settings.value.appTheme).toJSON('hex');
-  cordova.exec(success, error, SERVICE, ACTION, [url, theme, isConsole]);
+  cordova.exec(
+    success, error, SERVICE, ACTION,
+    [url || "about:blank", theme, isConsole]
+  );
+}
+
+function reload() {
+  return new Promise((resolve, reject) => {
+    cordova.exec(
+      resolve, reject,
+      SERVICE, 'reload', []
+    );
+  });
 }
 
 export default {
-  open,
-};
+  open, reload
+}

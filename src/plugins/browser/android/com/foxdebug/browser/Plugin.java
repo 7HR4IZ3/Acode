@@ -1,6 +1,7 @@
 package com.foxdebug.browser;
 
 import android.content.Intent;
+import com.foxdebug.browser.Browser;
 import com.foxdebug.browser.BrowserActivity;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -28,6 +29,25 @@ public class Plugin extends CordovaPlugin {
       intent.putExtra("onlyConsole", onlyConsole);
       cordova.getActivity().startActivity(intent);
       callbackContext.success("Opened browser");
+      return true;
+    } else if (action.equals("reload")) {
+      Browser browser = BrowserActivity.browser;
+      if (browser != null) {
+        browser.webView.reload();
+        callbackContext.success("Reloaded browser");
+      } else {
+        callbackContext.error("No active browser");
+      }
+      return true;
+    } else if (action.equals("evaluate")) {
+      Browser browser = BrowserActivity.browser;
+      if (browser != null) {
+        String javascript = args.getString(0);
+        browser.webView.evaluateJavascript(javascript, null);
+        callbackContext.success("Reloaded browser");
+      } else {
+        callbackContext.error("No active browser");
+      }
       return true;
     }
     return false;

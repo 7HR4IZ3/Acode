@@ -156,7 +156,7 @@ export default class EditorFile extends EditorView {
         this.#uri, 'uri'
       );
 
-    if (doesExists) {
+    if (doesExists && doesExists !== this) {
       doesExists.makeActive();
       return doesExists;
     }
@@ -194,6 +194,7 @@ export default class EditorFile extends EditorView {
 
     this.editorManager.emit('new-file', this);
     this.session = ace.createEditSession(options?.text || '');
+
     this.setMode();
     this.#setupSession();
 

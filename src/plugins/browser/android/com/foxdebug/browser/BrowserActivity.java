@@ -15,8 +15,8 @@ import org.json.JSONObject;
 
 public class BrowserActivity extends Activity {
 
-  private Browser browser;
-  private Ui.Theme theme;
+  public Browser browser;
+  public Ui.Theme theme;
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
