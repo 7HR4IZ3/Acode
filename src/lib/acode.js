@@ -19,6 +19,7 @@ import confirm from "dialogs/confirm";
 import browser from "plugins/browser";
 import appSettings from "lib/settings";
 import colorPicker from "dialogs/color";
+import EditorView from "lib/editorView";
 import EditorFile from "lib/editorFile";
 import openFolder from "lib/openFolder";
 import encodings from "utils/encodings";
@@ -190,6 +191,7 @@ export default class Acode {
     this.define("settings", appSettings);
     this.define("sideButton", SideButton);
     this.define("EditorFile", EditorFile);
+    this.define("EditorView", EditorView);
     this.define("inputhints", inputhints);
     this.define("openfolder", openFolder);
     this.define("colorPicker", colorPicker);

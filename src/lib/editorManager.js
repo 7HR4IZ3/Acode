@@ -61,29 +61,36 @@ async function EditorManager($header, $body, $isMainEditor = false) {
       events[event].forEach(fn => fn(...args));
     }
   };
-  const $container = <div className="editor-container"></div>;
-  const editor = ace.edit($container);
+  const $container = <div className="view-container"></div>;
+  const editorContainer = <div className="editor-container"></div>;
+  const editor = ace.edit(editorContainer);
   const $vScrollbar = ScrollBar({
     width: scrollbarSize,
     onscroll: onscrollV,
     onscrollend: onscrollVend,
-    parent: $container
+    parent: editorContainer
   });
   const $hScrollbar = ScrollBar({
     width: scrollbarSize,
     onscroll: onscrollH,
     onscrollend: onscrollHEnd,
-    parent: $container,
+    parent: editorContainer,
     placement: "bottom"
   });
   const manager = {
     id: EDITOR_ID++,
     views: [],
     onupdate: () => {},
+    editorContainer,
     activeFile: null,
-    addFile, editor, getFile,
-    addView, getView, switchView,
-    switchFile, hasUnsavedFiles,
+    addFile,
+    editor,
+    getFile,
+    addView,
+    getView,
+    switchView,
+    switchFile,
+    hasUnsavedFiles,
     getEditorHeight,
     getEditorWidth,
     header: $header,
@@ -91,16 +98,14 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     container: $container,
     switchTo: () => switchManager(),
     get files() {
-      return manager.views.filter(
-        view => (view instanceof EditorFile)
-      )
+      return manager.views.filter(view => view instanceof EditorFile);
     },
     set files(files) {
       const views = manager.views.filter(
-        view => (
-          view && view instanceof EditorView &&
+        view =>
+          view &&
+          view instanceof EditorView &&
           view?.constructor.name === "EditorView"
-        )
       );
       manager.views = [...files, ...views];
     },
@@ -167,7 +172,9 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     icon: "warningreport_problem",
     backgroundColor: "var(--danger-color)",
     textColor: "var(--danger-text-color)",
-    onclick() { acode.exec("open", "problems") }
+    onclick() {
+      acode.exec("open", "problems");
+    }
   });
 
   // set mode text
@@ -283,7 +290,7 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     file.editorManager = manager;
     $header.text = file.name;
   }
-  
+
   function addView(view) {
     if (manager.views.includes(view)) return;
     manager.views.push(view);
@@ -471,7 +478,8 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     const contentTop = container.getBoundingClientRect().top;
     const contentBottom = contentTop + container.clientHeight;
     const cursorTop = editor.renderer.textToScreenCoordinates(
-      cursorPos.row, cursorPos.column
+      cursorPos.row,
+      cursorPos.column
     ).pageY;
     const cursorBottom = cursorTop + teardropSize + 10;
     return cursorTop >= contentTop && cursorBottom <= contentBottom;
@@ -627,15 +635,22 @@ async function EditorManager($header, $body, $isMainEditor = false) {
   }
 
   function switchFile(id) {
-    const { id: activeFileId } = manager.activeFile || {};
+    const { activeFile } = manager;
+    const { id: activeFileId } = activeFile || {};
     if (activeFileId === id) return;
 
-    const file = manager.getFile(id);
+    const file = manager.getView(id);
+    const content = file.content;
+    const activeContent = activeFile?.content;
 
-    manager.activeFile?.tab.classList.remove("active");
-    manager.activeFile = file;
-    editor.setSession(file.session);
-    $header.text = file.filename;
+    if (!content) throw new Error("View has no content");
+
+    if (!activeContent)
+      manager.container.appendChild(content);
+
+    if (activeContent && content !== activeContent) {
+      activeContent.replaceWith(content);
+    }
 
     $hScrollbar.remove();
     $vScrollbar.remove();
@@ -645,12 +660,15 @@ async function EditorManager($header, $body, $isMainEditor = false) {
       setHScrollValue();
     }
 
-    editor.setReadOnly(!file.editable || !!file.loading);
-
-    manager.onupdate("switch-file");
-    events.emit("switch-file", file);
+    if (file instanceof EditorFile) {
+      manager.onupdate("switch-file");
+      events.emit("switch-file", file);
+    } else {
+      manager.onupdate("switch-view");
+      events.emit("switch-view", file);
+    }
   }
-  
+
   function switchView(id) {
     switchFile(id);
   }
@@ -727,24 +745,24 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     return manager.files.find(file => {
       switch (type) {
         case "id":
-          return (file.id === checkFor);
+          return file.id === checkFor;
         case "name":
-          return (file.name === checkFor);
+          return file.name === checkFor;
         case "uri":
-          return (file.uri === checkFor);
+          return file.uri === checkFor;
         default:
           return false;
       }
     });
   }
 
-  function getView(checkFor, type="id") {
+  function getView(checkFor, type = "id") {
     return manager.views.find(file => {
       switch (type) {
         case "id":
-          return (file.id === checkFor);
+          return file.id === checkFor;
         case "name":
-          return (file.name === checkFor);
+          return file.name === checkFor;
         default:
           return false;
       }

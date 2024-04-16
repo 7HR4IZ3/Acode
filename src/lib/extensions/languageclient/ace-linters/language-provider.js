@@ -307,6 +307,8 @@ class SessionLanguageProvider {
         python: "py"
     };
     $extensionToMode = {
+      "svelte": "svelte",
+      "vue": "vue"
     };
     editor;
     constructor(session, editor, messageController, options) {

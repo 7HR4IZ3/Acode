@@ -25,6 +25,7 @@ import plugins from "pages/plugins";
 import fsOperation from "fileSystem";
 import toast from "components/toast";
 import EditorFile from "lib/editorFile";
+import EditorView from "lib/editorView";
 import openFolder from "lib/openFolder";
 import checkFiles from "lib/checkFiles";
 import actionStack from "lib/actionStack";
@@ -404,7 +405,84 @@ async function loadApp(acode) {
   });
   //#endregion
 
-  new EditorFile();
+  const recentFiles = helpers.parseJSON(
+    localStorage.recentFiles || "[]"
+  );
+  const recentFolders = helpers.parseJSON(
+    localStorage.recentFolders || "[]"
+  );
+  const welcome = new EditorView("Welcome", {
+    url: "acode://welcome",
+    info: "Acode",
+    content: (
+      <div style={{
+        height: "100%",
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center"
+      }}>
+        <div style={{
+          display: "flex", flexDirection: "row",
+          gap: "1rem", margin: "2rem", padding: "1rem"
+        }}>
+          <div style={{padding: "1rem"}}>
+            <h3 style={{textAlign: "center"}}>Recent Folders</h3>
+            <ul style={{
+              display: "flex",
+              marginTop: "1rem",
+              flexDirection: "column",
+              justifyContent: "start"
+            }}>
+              {recentFolders.map(folder => (<div style={{
+                display: "flex", flexDirection: "row",
+                alignItems: "center", textAlign: "center",
+                justifyContent: "start", gap: ".5rem"
+              }}>
+                <span className="icon folder"></span>
+                <span
+                  className="text sub-text" data-subtext={folder.url}
+                  onclick={() => openFolder(folder.url, folder.opts)}
+                >
+                  {Url.basename(folder.url)}
+                </span>
+              </div>))}
+            </ul>
+          </div>
+          <div style={{padding: "1rem"}}>
+            <h3 style={{textAlign: "center"}}>Recent Files</h3>
+            <ul style={{
+              display: "flex",
+              marginTop: "1rem",
+              flexDirection: "column",
+              justifyContent: "start"
+            }}>
+              {recentFiles.map(file => (<div style={{
+                display: "flex",flexDirection: "row",
+                alignItems: "center", textAlign: "center",
+                justifyContent: "start", gap: ".5rem"
+              }}>
+                <span className={helpers.getIconForFile(file)}></span>
+                <span
+                  className="text sub-text" data-subtext={file}
+                  onclick={() => {
+                    new EditorFile(
+                      Url.basename(file),
+                      { uri: file }
+                    )
+                  }}
+                >
+                  {Url.basename(file)}
+                </span>
+              </div>))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    )
+  });
+  welcome.makeActive();
 
   checkPluginsUpdate()
     .then(updates => {
@@ -460,8 +538,9 @@ async function loadApp(acode) {
     try {
       await restoreFiles(files, () =>
         acode.exec("new-editor", [
-          $header,
-          $main.appendChild(<div className="editor"></div>)
+          $header, $main.appendChild(
+            <div className="editor"></div>
+          )
         ])
       );
     } catch (error) {

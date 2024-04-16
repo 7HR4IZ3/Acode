@@ -91,6 +91,13 @@ a {
   color: var(--link-text-color);
 }
 
+.view-container {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+
 .open-file-list {
   position: relative;
   height: 30px;

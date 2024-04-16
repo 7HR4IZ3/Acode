@@ -8,7 +8,22 @@
     <link rel="stylesheet" href="./res/icons/style.css" />
     <link rel="stylesheet" href="./res/file-icons/style.css" />
 
-    <script src="./js/tag.js"></script>
+    <script>
+      const debugPort = localStorage.acodeDebugPort;
+      const noRedirect =
+        location.search.indexOf("acodeDebugNoRedirect") !== -1;
+
+      if (
+        debugPort && !noRedirect &&
+        location.port !== String(debugPort)
+      ) {
+        location.assign(`http://localhost:${debugPort}`);
+      } else if (debugPort && location.port === String(debugPort)) {
+        if (localStorage.acodeDebugNoRedirect === "true") {
+          location.assign("http://localhost?acodeDebugNoRedirect");
+        }
+      }
+    </script>
     <script src="./js/eruda.min.js"></script>
     <script>
       eruda.init();
@@ -164,12 +179,10 @@
         text-align: center;
       }
     </style>
-
-    <!-- <link rel="stylesheet" href="./bundle/main.css"></link> -->
-    <!-- <script src="./bundle/main.js" type="module"></script> -->
     <script src="./js/build/main.build.js"></script>
 
-        <title>Acode</title>
+
+    <title>Acode</title>
 
 
 <!--styles-->

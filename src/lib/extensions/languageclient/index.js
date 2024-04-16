@@ -2,6 +2,8 @@ import "styles/lsclient.scss";
 
 import pty from "lib/pty";
 import Page from "components/page";
+import EditorFile from "lib/editorFile";
+import EditorManager from "lib/editorManager";
 import sideButton from "components/sideButton";
 import settingsPage from "components/settingsPage";
 
@@ -33,7 +35,7 @@ import appSettings from "lib/settings";
  */
 
 /** @type {EditorManager} */
-let { editor } = editorManager;
+const { editor } = editorManager;
 
 let defaultServices = {};
 var Range = ace.require("ace/range").Range;
@@ -157,9 +159,7 @@ export class AcodeLanguageServerPlugin {
       icon: "edit",
       onclick: () => {
         this.$tree.innerHTML = "";
-        this.$tree.appendChild(
-          this.$breadcrumbsNode.cloneNode(true)
-        );
+        this.$tree.appendChild(this.$breadcrumbsNode.cloneNode(true));
         this.$tree.show();
       }
     });
@@ -340,7 +340,10 @@ export class AcodeLanguageServerPlugin {
     this.#setupSidebar();
     this.#setupCommands();
     if (this.settings.codelens) {
-      this.#setupCodelens();
+      this.#setupCodelens(editorManager.editor);
+      EditorManager.on("create", ({editor}) => {
+        this.#setupCodelens(editor);
+      });
     }
     this.#setupAcodeEvents();
     this.#setupFooter();
@@ -348,10 +351,16 @@ export class AcodeLanguageServerPlugin {
       this.#setupBreadcrumbs();
     }
 
-    this.$client.registerEditor(editor);
+    EditorManager.on("create", ({editor}) => {
+      this.#registerEditor(editor);
+    });
+    this.#registerEditor(editor);
 
     if (this.settings.replaceCompleters) {
-      this.$completers = editor.completers.splice(1, 2);
+      EditorManager.on("create", ({editor}) => {
+        editor.completers.splice(1, 2);
+      });
+      this.$completers = editorManager.editor.completers.splice(1, 2);
     }
 
     const { list, cb } = this.settingsObj;
@@ -367,7 +376,7 @@ export class AcodeLanguageServerPlugin {
 
     let wrap = (mode, callback) => {
       return async (...args) => {
-        let activeMode = editor.session.$modeId.substring(9);
+        let activeMode = editorManager.editor.session.$modeId.substring(9);
         if (mode.split("|").includes(activeMode)) {
           return await callback(...args);
         }
@@ -523,7 +532,8 @@ export class AcodeLanguageServerPlugin {
     });
 
     editorManager.on("switch-file", async () => {
-      let mode = editorManager.editor.session.$modeId.substring(9);
+      let mode =
+        editorManager.editorManager.editor.session.$modeId.substring(9);
       let serverInfo = this.$serverInfos.get(mode);
       if (!serverInfo) {
         for (let [key, value] of this.$serverInfos) {
@@ -869,7 +879,7 @@ export class AcodeLanguageServerPlugin {
         cursor.start.row,
         cursor.start.column
       );
-      editorManager.editor.focus();
+      editorManager.editorManager.editor.focus();
     }
     return activeFile;
   }
@@ -922,7 +932,7 @@ export class AcodeLanguageServerPlugin {
 
   #getServices(session) {
     return this.$manager.findServicesByMode(
-      (session || editor.session).$modeId.substring(9)
+      (session || editorManager.editor.session).$modeId.substring(9)
     );
   }
 
@@ -937,6 +947,18 @@ export class AcodeLanguageServerPlugin {
         return true;
       }
       return false;
+    });
+  }
+  
+  #registerEditor(editor) {
+    this.$client.registerEditor(editor);
+    editor.on("focus", () => {
+      if (this.$mainNode?.classList.contains("visible")) {
+        this.$mainNode?.classList.remove("visible");
+      }
+      if (this.$currentRange !== undefined) {
+        editor.session.removeMarker(this.$currentRange);
+      }
     });
   }
 
@@ -962,15 +984,6 @@ export class AcodeLanguageServerPlugin {
         }
       } else {
         this.$mainNode?.classList.add("visible");
-      }
-    });
-
-    editor.on("focus", () => {
-      if (this.$mainNode?.classList.contains("visible")) {
-        this.$mainNode?.classList.remove("visible");
-      }
-      if (this.$currentRange !== undefined) {
-        editor.session.removeMarker(this.$currentRange);
       }
     });
   }
@@ -1075,7 +1088,10 @@ export class AcodeLanguageServerPlugin {
         }, 500);
       };
 
-      editor.on("change", this.$func);
+      editorManager.editor.on("change", this.$func);
+      EditorManager.on("create", ({editor}) => {
+        editor.on("change", this.$func);
+      });
       editorManager.on("switch-file", () =>
         setTimeout(this.$buildBreadcrumbs.bind(this), 0)
       );
@@ -1083,7 +1099,7 @@ export class AcodeLanguageServerPlugin {
     }
   }
 
-  #setupCodelens() {
+  #setupCodelens(editor) {
     return new Promise((resolve, reject) => {
       getCodeLens(codeLens => {
         if (!codeLens) return reject("CodeLens not available.");
@@ -1263,7 +1279,10 @@ export class AcodeLanguageServerPlugin {
       false
     );
 
-    editor.commands.addCommands(commands);
+    editorManager.editor.commands.addCommands(commands);
+    EditorManager.on("create", ({editor}) => {
+      editor.commands.addCommands(commands);
+    });
   }
 
   #goToDefinition(type = false) {
@@ -1271,7 +1290,7 @@ export class AcodeLanguageServerPlugin {
       if (type) return capabilities.typeDefinitionProvider;
       return capabilities.definitionProvider;
     }).map(service => service.serviceInstance);
-    let cursor = editor.getCursorPosition();
+    let cursor = editorManager.editor.getCursorPosition();
     let position = fromPoint(cursor);
 
     services.map(service => {
@@ -1281,7 +1300,7 @@ export class AcodeLanguageServerPlugin {
             "textDocument/" + (type ? "typeDefinition" : "definition"),
             {
               textDocument: {
-                uri: this.$client.$getFileName(editor.session)
+                uri: this.$client.$getFileName(editorManager.editor.session)
               },
               position
             }
@@ -1306,7 +1325,7 @@ export class AcodeLanguageServerPlugin {
     let services = this.#filterService(
       capabilities => capabilities.declarationProvider
     ).map(service => service.serviceInstance);
-    let cursor = editor.getCursorPosition();
+    let cursor = editorManager.editor.getCursorPosition();
     let position = fromPoint(cursor);
 
     services.map(async service => {
@@ -1314,7 +1333,7 @@ export class AcodeLanguageServerPlugin {
         service.connection
           .sendRequest("textDocument/declaration", {
             textDocument: {
-              uri: this.$client.$getFileName(editor.session)
+              uri: this.$client.$getFileName(editorManager.editor.session)
             },
             position
           })
@@ -1343,7 +1362,7 @@ export class AcodeLanguageServerPlugin {
     let services = this.#filterService(
       capabilities => capabilities.referencesProvider
     ).map(service => service.serviceInstance);
-    let cursor = editor.getCursorPosition();
+    let cursor = editorManager.editor.getCursorPosition();
     let position = fromPoint(cursor);
 
     services.map(async service => {
@@ -1351,7 +1370,7 @@ export class AcodeLanguageServerPlugin {
         service.connection
           .sendRequest("textDocument/references", {
             textDocument: {
-              uri: this.$client.$getFileName(editor.session)
+              uri: this.$client.$getFileName(editorManager.editor.session)
             },
             position,
             context: { includeDeclaration: true }
@@ -1380,7 +1399,7 @@ export class AcodeLanguageServerPlugin {
     let services = this.#filterService(
       capabilities => capabilities.implementationProvider
     ).map(service => service.serviceInstance);
-    let cursor = editor.getCursorPosition();
+    let cursor = editorManager.editor.getCursorPosition();
     let position = fromPoint(cursor);
 
     services.map(async service => {
@@ -1388,7 +1407,7 @@ export class AcodeLanguageServerPlugin {
         service.connection
           .sendRequest("textDocument/implementation", {
             textDocument: {
-              uri: this.$client.$getFileName(editor.session)
+              uri: this.$client.$getFileName(editorManager.editor.session)
             },
             position
           })
@@ -1415,16 +1434,16 @@ export class AcodeLanguageServerPlugin {
     let services = this.#filterService(
       capabilities => capabilities.codeActionProvider
     ).map(service => service.serviceInstance);
-    let cursor = editor.getCursorPosition();
+    let cursor = editorManager.editor.getCursorPosition();
     let position = fromPoint(cursor);
-    let range = fromRange(editor.selection.getRange());
+    let range = fromRange(editorManager.editor.selection.getRange());
 
     services.map(service => {
       if (service.connection) {
         service.connection
           .sendRequest("textDocument/codeAction", {
             textDocument: {
-              uri: this.$client.$getFileName(editor.session)
+              uri: this.$client.$getFileName(editorManager.editor.session)
             },
             range,
             context: {
@@ -1459,10 +1478,10 @@ export class AcodeLanguageServerPlugin {
       capabilities => capabilities.renameProvider
     ).map(service => service.serviceInstance);
 
-    let cursor = editor.getCursorPosition();
+    let cursor = editorManager.editor.getCursorPosition();
     let position = fromPoint(cursor);
 
-    let currentName = editor.getSelectedText();
+    let currentName = editorManager.editor.getSelectedText();
     let newName = await (window.acode?.prompt || prompt)(
       "New name",
       currentName
@@ -1473,7 +1492,7 @@ export class AcodeLanguageServerPlugin {
         service.connection
           .sendRequest("textDocument/rename", {
             textDocument: {
-              uri: this.$client.$getFileName(editor.session)
+              uri: this.$client.$getFileName(editorManager.editor.session)
             },
             newName,
             position
@@ -1511,13 +1530,13 @@ export class AcodeLanguageServerPlugin {
           "textDocument/documentSymbol",
           {
             textDocument: {
-              uri: this.$client.$getFileName(editor.session)
+              uri: this.$client.$getFileName(editorManager.editor.session)
             }
           }
         );
       } else {
         return services[0].serviceInstance.findDocumentSymbols({
-          uri: this.$client.$getFileName(editor.session)
+          uri: this.$client.$getFileName(editorManager.editor.session)
         });
       }
     } catch (e) {
@@ -1526,7 +1545,10 @@ export class AcodeLanguageServerPlugin {
   }
 
   async $buildBreadcrumbs() {
-    let symbols = await this.getDocumentSymbols();
+    let symbols =
+      editorManager.activeFile instanceof EditorFile
+        ? await this.getDocumentSymbols()
+        : [];
 
     if (!symbols?.length) {
       this.$treeBtn?.hide();
@@ -1708,17 +1730,17 @@ export class AcodeLanguageServerPlugin {
       let start = object.location.range.start;
       let end = object.location.range.end;
 
-      editor.scrollToLine(start.line - 10);
-      editorManager.editor.session.selection.moveCursorTo(
+      editorManager.editor.scrollToLine(start.line - 10);
+      editorManager.editorManager.editor.session.selection.moveCursorTo(
         start.line,
         start.character
       );
 
       if (this.$currentRange !== undefined) {
-        editor.session.removeMarker(this.$currentRange);
+        editorManager.editor.session.removeMarker(this.$currentRange);
       }
 
-      this.$currentRange = editor.session.addMarker(
+      this.$currentRange = editorManager.editor.session.addMarker(
         new Range(start.line, 0, end.line, 0),
         "ace_selected-word",
         "fullLine"
@@ -1853,10 +1875,13 @@ export class AcodeLanguageServerPlugin {
             break;
           case "replaceCompleters":
             if (value) {
-              this.$completers = editor.completers.splice(1, 2);
+              this.$completers = editorManager.editor.completers.splice(1, 2);
             } else {
               if (this.$completers) {
-                editor.completers = [...this.$completers, ...editor.completers];
+                editorManager.editor.completers = [
+                  ...this.$completers,
+                  ...editorManager.editor.completers
+                ];
               }
             }
             break;

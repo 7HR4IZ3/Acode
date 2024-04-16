@@ -18,5 +18,5 @@ export default async function loadPlugins() {
     )
   });
   const results = await Promise.all(promises);
-  return results.length;
+  return results;
 }

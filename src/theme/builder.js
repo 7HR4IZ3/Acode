@@ -24,8 +24,9 @@ export default class ThemeBuilder {
     "--popup-background-color": "rgb(255, 255, 255)",
     "--popup-text-color": "rgb(37, 37, 37)",
     "--popup-active-color": "rgb(169, 0, 0)",
-    "--danger-color": "rgb(160, 51, 0)",
-    "--danger-text-color": "rgb(255, 255, 255)",
+    "--warning-color": "rgb(255, 185, 92)",
+    "--danger-color": "rgb(255,51,40)",
+    "--danger-text-color": "rgb(255,255,255)",
     "--file-tab-width": "120px",
   };
 

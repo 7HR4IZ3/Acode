@@ -1,10 +1,13 @@
 import tile from "components/tile";
+import helpers from "utils/helpers";
 import constants from "./constants";
 import appSettings from './settings';
+import Sidebar from 'components/sidebar';
 import startDrag from 'handlers/editorFileTab';
 
 export const id = Symbol("view.id");
 export const name = Symbol("view.name");
+export const content = Symbol("view.content");
 
 export default class EditorView {
   /**
@@ -27,12 +30,22 @@ export default class EditorView {
    * @type {string}
    */
   #id = constants.DEFAULT_FILE_SESSION;
+
+  #content;
+  #options;
   #editorManager;
+
+  focused = false;
+  focusedBefore = false;
 
   constructor(name, options, editorManager) {
     this.#name = name;
+    this.#options = options;
     this.#editorManager =
       editorManager || window.editorManager;
+    this.#content = options?.content || (
+      <div className="view-content"></div>
+    )
 
     this.#tab = tile({
       text: name,
@@ -46,6 +59,12 @@ export default class EditorView {
     this.#tab.addEventListener(
       'click', tabOnclick.bind(this)
     );
+    this.tab.lead(
+      <span
+        className={options?.icon || "file file_type_default"}
+        style={{ paddingRight: '5px' }}
+      ></span>
+    );
 
     const { addView, getView } = this.#editorManager;
 
@@ -56,7 +75,9 @@ export default class EditorView {
         if (options.uri) this.#id = options.uri.hashCode();
         else this.#id = helpers.uuid();
       } else this.#id = options.id;
-    } else if (!options) {
+    }
+
+    if (!this.#id) {
       // if options aren't passed, that means default file is being created
       this.#id = constants.DEFAULT_FILE_SESSION;
     }
@@ -100,9 +121,22 @@ export default class EditorView {
     return this.#tab;
   }
 
+  get content() {
+    return this.#content;
+  }
+
+  get [content]() {
+    return this.#content;
+  }
+
+  set [content](element) {
+    if (!element) return;
+    this.#content = element;
+  }
+
   /**
    * File unique id.
-   */
+  */
   get id() {
     return this.#id;
   }
@@ -144,7 +178,7 @@ export default class EditorView {
     )
 
     this.#editorManager = manager;
-    this.#editorManager.addFile(this);
+    this.#editorManager.addView(this);
     this.#editorManager.openFileList.append(this.tab);
     this.makeActive();
   }
@@ -157,25 +191,60 @@ export default class EditorView {
 
     if (activeView) {
       if (activeView.id === this.id) return;
-      activeView.focusedBefore = activeFile.focused;
-      activeView.removeActive();
+      activeView.focusedBefore = activeView.focused;
+      activeView.remove();
     }
 
     switchView(this.id);
 
-    this.tab.classList.add('active');
-    this.tab.scrollIntoView();
+    this.#editorManager.activeFile?.tab
+      .classList.remove("active");
+    this.#editorManager.activeFile = this;
+
+    this.#editorManager.header.text = this.name;
+    this.#editorManager.header.subText = this.#options?.info || "";
+
+    this.#tab.classList.add('active');
+    this.#tab.scrollIntoView();
   }
 
+  remove() {
+    this.editorManager.views = this.editorManager.views.filter(
+      (view) => view.id !== this.id
+    );
+    const { views, activeFile } = this.editorManager;
+    if (activeFile.id === this.id) {
+      this.editorManager.activeFile = null;
+    }
+    this.destroy();
 
-  remove() {}
+    if (!views.length) {
+      Sidebar.hide();
+      this.editorManager.activeFile = null;
+      if (this.editorManager.isMain) {
+        acode.newEditorFile();
+      } else {
+        this.editorManager.onupdate('remove-view');
+        this.editorManager.emit('remove-view', this);
+        this.editorManager.destroy();
+        return true;
+      }
+    } else {
+      views[views.length - 1].makeActive();
+    }
+
+    this.editorManager.onupdate('remove-view');
+    this.editorManager.emit('remove-view', this);
+    return false;
+  }
 
   destroy() {
     appSettings.off(
       'update:openFileListPos',
       this.#onFilePosChange
     );
-    this.#tab.remove();
+    this.content?.remove();
+    this.#tab?.remove();
     this.#tab = null;
   }
 }

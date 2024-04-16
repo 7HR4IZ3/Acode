@@ -121,7 +121,7 @@ export async function loadApps() {
   sidebarApps.add(...(await import("./files")).default);
   sidebarApps.add(...(await import("./searchInFiles")).default);
   sidebarApps.add(...(await import("./extensions")).default);
-  sidebarApps.add(...(await import("./git")).default);
+  // sidebarApps.add(...(await import("./git")).default);
 }
 
 export default sidebarApps;

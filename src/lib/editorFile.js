@@ -9,10 +9,9 @@ import constants from "./constants";
 import openFolder from "./openFolder";
 import appSettings from './settings';
 import tile from "components/tile";
-import Sidebar from 'components/sidebar';
 import confirm from 'dialogs/confirm';
 
-import EditorView, { id, name } from "./editorView";
+import EditorView, { id, name, content } from "./editorView";
 
 const { Fold } = ace.require('ace/edit_session/fold');
 const { Range } = ace.require('ace/range');
@@ -162,6 +161,8 @@ export default class EditorFile extends EditorView {
     }
 
     this.tab.file = this;
+    this[content] =
+      this.editorManager.editor.container;
 
     const editable = options?.editable ?? true;
 
@@ -504,24 +505,9 @@ export default class EditorFile extends EditorView {
 
     this.#destroy();
 
-    this.editorManager.files = this.editorManager.files.filter((file) => file.id !== this.id);
-    const { files, activeFile } = this.editorManager;
-    if (activeFile.id === this.id) {
-      this.editorManager.activeFile = null;
-    }
-    if (!files.length) {
-      Sidebar.hide();
-      this.editorManager.activeFile = null;
-      if (this.editorManager.isMain) {
-        new EditorFile();
-      } else {
-        this.editorManager.onupdate('remove-file');
-        this.editorManager.emit('remove-file', this);
-        return this.editorManager.destroy();
-      }
-    } else {
-      files[files.length - 1].makeActive();
-    }
+    const shouldReturn = super.remove();
+    if (shouldReturn) return;
+
     this.editorManager.onupdate('remove-file');
     this.editorManager.emit('remove-file', this);
   }
@@ -581,7 +567,14 @@ export default class EditorFile extends EditorView {
   makeActive() {
     super.makeActive();
 
-    const { editor, header } = this.editorManager;
+    const manager = this.editorManager;
+    const { editor, header } = manager;
+
+    editor.setSession(this.session);
+    header.subText = this.#getTitle();
+
+    editor.setReadOnly(!this.editable || !!this.loading);
+
     if (this.focused) {
       editor.focus();
     } else {
@@ -592,7 +585,6 @@ export default class EditorFile extends EditorView {
       this.#loadText();
     }
 
-    header.subText = this.#getTitle();
     this.#emit('focus', createFileEvent(this));
   }
 
