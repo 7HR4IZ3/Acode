@@ -249,7 +249,8 @@ async function loadApp(acode) {
   const $sidebar = Sidebar({ container: $main, toggler: $navToggler });
   const $rightSidebar = createSidebar($main, undefined, "right");
   const $rightToggler = SideButton({
-    icon: "menu", onclick: () => $rightSidebar.show()
+    icon: "menu",
+    onclick: () => $rightSidebar.show()
   });
   rightSidebarApps.init($rightSidebar);
   $rightToggler.show();
@@ -405,84 +406,132 @@ async function loadApp(acode) {
   });
   //#endregion
 
-  const recentFiles = helpers.parseJSON(
-    localStorage.recentFiles || "[]"
-  );
-  const recentFolders = helpers.parseJSON(
-    localStorage.recentFolders || "[]"
-  );
-  const welcome = new EditorView("Welcome", {
-    url: "acode://welcome",
-    info: "Acode",
-    content: (
-      <div style={{
-        height: "100%",
-        width: "100%",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center"
-      }}>
-        <div style={{
-          display: "flex", flexDirection: "row",
-          gap: "1rem", margin: "2rem", padding: "1rem"
-        }}>
-          <div style={{padding: "1rem"}}>
-            <h3 style={{textAlign: "center"}}>Recent Folders</h3>
-            <ul style={{
+  if (settings.value.hideWelcome) {
+    new EditorFile();
+  } else {
+    const recentFiles = helpers
+      .parseJSON(localStorage.recentFiles || "[]")
+      .slice(0, 10);
+    const recentFolders = helpers
+      .parseJSON(localStorage.recentFolders || "[]")
+      .slice(0, 10);
+    const welcome = new EditorView("Welcome", {
+      url: "acode://welcome",
+      info: "Acode",
+      content: (
+        <div
+          style={{
+            height: "100%",
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center"
+          }}
+        >
+          <div
+            style={{
               display: "flex",
-              marginTop: "1rem",
-              flexDirection: "column",
-              justifyContent: "start"
-            }}>
-              {recentFolders.map(folder => (<div style={{
-                display: "flex", flexDirection: "row",
-                alignItems: "center", textAlign: "center",
-                justifyContent: "start", gap: ".5rem"
-              }}>
-                <span className="icon folder"></span>
-                <span
-                  className="text sub-text" data-subtext={folder.url}
-                  onclick={() => openFolder(folder.url, folder.opts)}
-                >
-                  {Url.basename(folder.url)}
-                </span>
-              </div>))}
-            </ul>
+              flexDirection: "row",
+              gap: "1rem",
+              margin: "2rem",
+              padding: "1rem"
+            }}
+          >
+            <div style={{ padding: "1rem" }}>
+              <h3 style={{ textAlign: "center" }}>Recent Folders</h3>
+              <ul
+                style={{
+                  display: "flex",
+                  marginTop: "1rem",
+                  flexDirection: "column",
+                  justifyContent: "start"
+                }}
+              >
+                {recentFolders.map(folder => (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      textAlign: "center",
+                      justifyContent: "start",
+                      margin: ".5rem",
+                      gap: ".5rem"
+                    }}
+                  >
+                    <span className="icon folder"></span>
+                    <span
+                      className="text sub-text"
+                      data-subtext={folder.url}
+                      onclick={() => openFolder(folder.url, folder.opts)}
+                    >
+                      {Url.basename(folder.url)}
+                    </span>
+                  </div>
+                ))}
+              </ul>
+            </div>
+            <div style={{ padding: "1rem" }}>
+              <h3 style={{ textAlign: "center" }}>Recent Files</h3>
+              <ul
+                style={{
+                  display: "flex",
+                  marginTop: "1rem",
+                  flexDirection: "column",
+                  justifyContent: "start"
+                }}
+              >
+                {recentFiles.map(file => (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      textAlign: "center",
+                      justifyContent: "start",
+                      gap: ".5rem"
+                    }}
+                  >
+                    <span className={helpers.getIconForFile(file)}></span>
+                    <span
+                      className="text sub-text"
+                      data-subtext={file}
+                      onclick={() => {
+                        new EditorFile(Url.basename(file), { uri: file });
+                      }}
+                    >
+                      {Url.basename(file)}
+                    </span>
+                  </div>
+                ))}
+              </ul>
+            </div>
           </div>
-          <div style={{padding: "1rem"}}>
-            <h3 style={{textAlign: "center"}}>Recent Files</h3>
-            <ul style={{
+          <div
+            style={{
               display: "flex",
-              marginTop: "1rem",
-              flexDirection: "column",
-              justifyContent: "start"
-            }}>
-              {recentFiles.map(file => (<div style={{
-                display: "flex",flexDirection: "row",
-                alignItems: "center", textAlign: "center",
-                justifyContent: "start", gap: ".5rem"
-              }}>
-                <span className={helpers.getIconForFile(file)}></span>
-                <span
-                  className="text sub-text" data-subtext={file}
-                  onclick={() => {
-                    new EditorFile(
-                      Url.basename(file),
-                      { uri: file }
-                    )
-                  }}
-                >
-                  {Url.basename(file)}
-                </span>
-              </div>))}
-            </ul>
+              flexDirection: "row",
+              gap: ".7rem",
+              alignItems: "center"
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={!settings.value.hideWelcome}
+              onchange={function () {
+                settings.update({
+                  hideWelcome: !this.checked
+                });
+              }}
+            />
+            <span class="text">Show welcome on startup</span>
           </div>
         </div>
-      </div>
-    )
-  });
-  welcome.makeActive();
+      )
+    });
+    welcome.makeActive();
+  }
 
   checkPluginsUpdate()
     .then(updates => {
@@ -656,7 +705,7 @@ function createFileMenu({ top, bottom, toggler }) {
     toggler,
     transformOrigin: top ? "top right" : "bottom right",
     innerHTML: () => {
-      const file = window.editorManager.activeFile;
+      const file = editorManager.activeFile;
 
       if (file.loading) {
         $menu.classList.add("disabled");
@@ -673,7 +722,7 @@ function createFileMenu({ top, bottom, toggler }) {
         file_read_only: !file.editable,
         file_on_disk: !!file.uri,
         file_eol: file.eol,
-        copy_text: !!window.editorManager.editor.getCopyText()
+        copy_text: !!editorManager.editor.getCopyText()
       });
     }
   });

@@ -99,6 +99,11 @@ export default function otherSettings() {
       checkbox: values.rememberFolders,
     },
     {
+      key: 'hideWelcome',
+      text: strings['hide welcome'] || "Hide Welcome",
+      checkbox: !!values.hideWelcome,
+    },
+    {
       key: 'floatingButton',
       text: strings['floating button'],
       checkbox: values.floatingButton,

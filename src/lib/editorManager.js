@@ -807,7 +807,13 @@ const events = {
 
   emit(event, ...args) {
     if (!events[event]) return;
-    events[event].forEach(fn => fn(...args));
+    events[event].forEach(fn => {
+      try {
+        fn(...args)
+      } catch (err) {
+        console.error(err, fn, ...args);
+      }
+    });
   }
 };
 EditorManager.on = (types, callback) => {

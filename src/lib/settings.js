@@ -119,6 +119,7 @@ class Settings {
       leftMargin: 50,
       checkFiles: true,
       desktopMode: false,
+      hideWelcome: false,
       console: this.CONSOLE_LEGACY,
       keyboardMode: this.KEYBOARD_MODE_NO_SUGGESTIONS_AGGRESSIVE,
       rememberFiles: true,
