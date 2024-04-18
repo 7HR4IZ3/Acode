@@ -763,7 +763,7 @@ export default function addTouchListeners(editor, minimal, onclick) {
    * @returns {void}
    */
   function hideMenu(clearActive = true) {
-    if (!$el.parentElement.contains($menu)) return;
+    if (!$el.parentElement?.contains($menu)) return;
     $menu.remove();
     editor.selection.off('changeCursor', hideMenu);
     editor.selection.off('changeSelection', hideMenu);

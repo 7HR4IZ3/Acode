@@ -533,7 +533,7 @@ export class AcodeLanguageServerPlugin {
 
     editorManager.on("switch-file", async () => {
       let mode =
-        editorManager.editorManager.editor.session.$modeId.substring(9);
+        editorManager.editor.session.$modeId.substring(9);
       let serverInfo = this.$serverInfos.get(mode);
       if (!serverInfo) {
         for (let [key, value] of this.$serverInfos) {
@@ -879,7 +879,7 @@ export class AcodeLanguageServerPlugin {
         cursor.start.row,
         cursor.start.column
       );
-      editorManager.editorManager.editor.focus();
+      editorManager.editor.focus();
     }
     return activeFile;
   }
@@ -1731,7 +1731,7 @@ export class AcodeLanguageServerPlugin {
       let end = object.location.range.end;
 
       editorManager.editor.scrollToLine(start.line - 10);
-      editorManager.editorManager.editor.session.selection.moveCursorTo(
+      editorManager.editor.session.selection.moveCursorTo(
         start.line,
         start.character
       );
