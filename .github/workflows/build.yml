@@ -40,9 +40,6 @@ jobs:
       - name: Configure the platform
         run: yarn clean
 
-      # - name: Add Android platform
-      #   run: cordova platform add android
-
       - name: Build Android dev apk
         run: yarn build android
         env:
@@ -53,10 +50,10 @@ jobs:
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
-      - name: Sign
-        run: |
-              sudo chmod 777 ./utils/scripts/sign.sh
-              ./utils/scripts/sign.sh
+      # - name: Sign
+      #   run: |
+      #         sudo chmod 777 ./utils/scripts/sign.sh
+      #         ./utils/scripts/sign.sh
 
       - name: Upload dev APK
         uses: actions/upload-artifact@v3
@@ -64,8 +61,8 @@ jobs:
           name: app-dev
           path: ./*.apk
 
-      - name: Upload release bundle
-        uses: actions/upload-artifact@v3
-        with:
-          name: app-release
-          path: ./*.aab
+      # - name: Upload release bundle
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: app-release
+      #     path: ./*.aab
