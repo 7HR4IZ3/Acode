@@ -34,21 +34,24 @@ jobs:
       - name: Install yarn
         run: npm install -g yarn
 
-      - name: Install app dependencies
+      - name: Install App Dependencies
+        run: yarn
+
+      - name: Setup App Dependencies
         run: yarn setup
 
-      - name: Configure the platform
+      - name: Configure Platform
         run: yarn clean
 
-      - name: Build Android dev apk
+      - name: Build Android apk
         run: yarn build android
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
-      - name: Build Android prod aab
-        run: yarn build android
-        env:
-          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+      # - name: Build Android prod aab
+      #   run: yarn build android
+      #   env:
+      #     ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
       # - name: Sign
       #   run: |
