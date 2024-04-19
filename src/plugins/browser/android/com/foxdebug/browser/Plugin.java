@@ -22,7 +22,10 @@ public class Plugin extends CordovaPlugin {
       JSONObject theme = args.getJSONObject(1);
       boolean onlyConsole = args.optBoolean(2, false);
       String themeString = theme.toString();
-      Intent intent = new Intent(cordova.getActivity(), BrowserActivity.class);
+      Intent intent = new Intent(
+        cordova.getActivity(),
+        BrowserActivity.class
+      );
 
       intent.putExtra("url", url);
       intent.putExtra("theme", themeString);
@@ -48,6 +51,31 @@ public class Plugin extends CordovaPlugin {
       } else {
         callbackContext.error("No active browser");
       }
+      return true;
+    } else if (action.equals("show")) {
+      String url = args.getString(0);
+      JSONObject theme = args.getJSONObject(1);
+      boolean onlyConsole = args.optBoolean(2, false);
+      String themeString = theme.toString();
+
+      Intent intent = new Intent(
+        cordova.getActivity(),
+        BrowserActivity.class
+      );
+
+      Browser browser = BrowserActivity.browser;
+      if (browser != null) {
+        intent.putExtra("url", url);
+      } else {
+        intent.putExtra("url", "about:blank");
+      }
+
+      intent.putExtra("show", true);
+      intent.putExtra("theme", themeString);
+      intent.putExtra("onlyConsole", onlyConsole);
+
+      cordova.getActivity().startActivity(intent);
+      callbackContext.success("Opened browser");
       return true;
     }
     return false;

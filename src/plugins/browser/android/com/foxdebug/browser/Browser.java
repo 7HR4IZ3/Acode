@@ -41,8 +41,9 @@ public class Browser extends LinearLayout {
 
   public Menu menu;
   public WebView webView;
+  public Context context;
+
   private Ui.Theme theme;
-  private Context context;
   private TextView urlText;
   private LinearLayout main;
   private ImageView favicon;
@@ -180,6 +181,7 @@ public class Browser extends LinearLayout {
     menu.addItem(Ui.Icons.NO_CACHE, "Disable Cache", false);
     menu.addItem(Ui.Icons.TERMINAL, "Console", false);
     menu.addItem(Ui.Icons.OPEN_IN_BROWSER, "Open in Browser");
+    menu.addItem(Ui.Icons.EXIT, "Minimize");
     menu.addItem(Ui.Icons.EXIT, "Exit");
 
     menu.setCallback(
@@ -227,6 +229,9 @@ public class Browser extends LinearLayout {
             case "Console":
               setConsoleVisible(checked);
               break;
+            case "Minimize":
+              ((Activity) context).finish();
+              break;
             case "Disable Cache":
               webView
                 .getSettings()
@@ -236,8 +241,7 @@ public class Browser extends LinearLayout {
               break;
             case "Open in Browser":
               Intent browserIntent = new Intent(
-                Intent.ACTION_VIEW,
-                Uri.parse(url)
+                Intent.ACTION_VIEW, Uri.parse(url)
               );
               context.startActivity(browserIntent);
               exit();
@@ -267,9 +271,7 @@ public class Browser extends LinearLayout {
 
   private void setTextViewProperties(TextView textView, int height) {
     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-      ViewGroup.LayoutParams.FILL_PARENT,
-      height,
-      1
+      ViewGroup.LayoutParams.FILL_PARENT, height, 1
     );
     params.gravity = Gravity.CENTER_VERTICAL;
     textView.setMaxLines(1);
@@ -289,8 +291,7 @@ public class Browser extends LinearLayout {
     desktopMode = enabled;
     webSettings.setUserAgentString(
       enabled
-        ? "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"
-        : null
+        ? "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36" : null
     );
 
     if (enabled) {
@@ -377,8 +378,7 @@ public class Browser extends LinearLayout {
   private void styleIcon(ImageView view) {
     int padding = Ui.dpToPixels(context, 7);
     LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-      imageSize,
-      imageSize
+      imageSize, imageSize
     );
 
     params.gravity = Gravity.CENTER_VERTICAL;
@@ -468,7 +468,10 @@ public class Browser extends LinearLayout {
         ) {
           if (actionId == EditorInfo.IME_ACTION_GO) {
             String url = v.getText().toString();
-            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            if (
+              !url.startsWith("http://") &&
+              !url.startsWith("https://")
+            ) {
               url = "http://" + url;
             }
 
@@ -536,6 +539,7 @@ public class Browser extends LinearLayout {
 
     webView.destroy();
     ((Activity) context).finish();
+    BrowserActivity.browser = null;
   }
 }
 

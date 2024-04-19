@@ -7,6 +7,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowInsetsController;
 import android.webkit.WebChromeClient;
@@ -15,7 +16,7 @@ import org.json.JSONObject;
 
 public class BrowserActivity extends Activity {
 
-  public Browser browser;
+  public static Browser browser;
   public Ui.Theme theme;
 
   @Override
@@ -25,7 +26,10 @@ public class BrowserActivity extends Activity {
     Intent intent = getIntent();
     String url = intent.getStringExtra("url");
     String themeString = intent.getStringExtra("theme");
+    boolean showBrowser = intent.getBooleanExtra("show", false);
     boolean onlyConsole = intent.getBooleanExtra("onlyConsole", false);
+    
+    if (url == null) { url = "about:blank"; }
 
     try {
       JSONObject obj = new JSONObject(themeString);
@@ -34,18 +38,27 @@ public class BrowserActivity extends Activity {
       theme = new Ui.Theme(new JSONObject());
     }
 
-    browser = new Browser(this, theme, onlyConsole);
-    browser.setUrl(url);
-    setContentView(browser);
+    if (showBrowser && BrowserActivity.browser != null) {
+      BrowserActivity.browser.context = this;
+    } else {
+      BrowserActivity.browser = new Browser(
+        this, theme, onlyConsole
+      );
+      BrowserActivity.browser.setUrl(url);
+    }
+
+    setContentView(BrowserActivity.browser);
     setSystemTheme(theme.get("primaryColor"));
   }
 
   @Override
   public void onBackPressed() {
-    boolean didGoBack = browser.goBack();
+    boolean didGoBack = BrowserActivity.browser.goBack();
 
     if (!didGoBack) {
-      browser.exit();
+      ((ViewGroup) BrowserActivity.browser.getParent())
+        .removeView(BrowserActivity.browser);
+      finish();
     }
   }
 
@@ -115,22 +128,20 @@ public class BrowserActivity extends Activity {
 
   @Override
   protected void onActivityResult(
-    int requestCode,
-    int resultCode,
-    Intent data
+    int requestCode, int resultCode, Intent data
   ) {
     super.onActivityResult(requestCode, resultCode, data);
 
-    if (requestCode == browser.FILE_SELECT_CODE) {
-      if (browser.filePathCallback == null) {
+    if (requestCode == BrowserActivity.browser.FILE_SELECT_CODE) {
+      if (BrowserActivity.browser.filePathCallback == null) {
         return;
       }
 
-      browser.filePathCallback.onReceiveValue(
+      BrowserActivity.browser.filePathCallback.onReceiveValue(
         WebChromeClient.FileChooserParams.parseResult(resultCode, data)
       );
 
-      browser.filePathCallback = null;
+      BrowserActivity.browser.filePathCallback = null;
     }
   }
 }
