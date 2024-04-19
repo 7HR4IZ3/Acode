@@ -1,7 +1,17 @@
 name: Build Android
 
 on: 
-  workflow_dispatch: true
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+        type: choice
+        options:
+          - info
+          - warning
+          - debug
   release:
     types: [published]
 
@@ -22,7 +32,6 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
-
           node-version: 18.x
 
       - name: Setup Android NDK
