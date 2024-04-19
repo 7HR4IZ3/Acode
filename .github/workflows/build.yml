@@ -61,7 +61,7 @@ jobs:
       - name: Upload dev APK
         uses: actions/upload-artifact@v3
         with:
-          name: app-dev
+          name: acodenode-debug
           path: ./*.apk
 
       # - name: Upload release bundle
