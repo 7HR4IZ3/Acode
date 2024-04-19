@@ -1,19 +1,6 @@
 name: Build Android
 
-on: 
-  workflow_dispatch:
-    inputs:
-      logLevel:
-        description: 'Log level'
-        required: true
-        default: 'warning'
-        type: choice
-        options:
-          - info
-          - warning
-          - debug
-  release:
-    types: [published]
+on: [release, workflow_dispatch]
 
 jobs:
   build:
