@@ -1,8 +1,8 @@
 name: Build Android
 
 on: 
-  - workflow_dispatch: true
-  - release:
+  workflow_dispatch: true
+  release:
     types: [published]
 
 jobs:
