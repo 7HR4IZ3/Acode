@@ -1,7 +1,7 @@
 {
-  "name": "com.foxdebug.acode",
-  "displayName": "Acode",
-  "version": "1.8.5",
+  "name": "com.foxdebug.acodenode",
+  "displayName": "Acode Node",
+  "version": "1.10.0",
   "description": "Acode is a code editor for android",
   "main": "index.js",
   "scripts": {
@@ -12,7 +12,7 @@
     "clean": "sh utils/scripts/clean.sh android android@10",
     "plugin": "sh utils/scripts/plugin.sh",
     "watch": "sh ./utils/scripts/watch.sh",
-    "setup": "node ./utils/setup.js",
+    "setup": "sh ./utils/scripts/setup.sh",
     "esbuild": "node ./utils/esbuild.mjs",
     "esbuild:watch": "node ./utils/esbuild.mjs watch",
     "ionic:serve": "vite www"
@@ -20,7 +20,7 @@
   "keywords": [
     "ecosystem:cordova"
   ],
-  "author": "Foxdebug (Ajit Kumar)",
+  "author": "7HR4IZ3",
   "license": "MIT",
   "cordova": {
     "plugins": {
@@ -50,12 +50,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deadlyjack/acode.git"
+    "url": "git+https://github.com/7HR4IZ3/acode.git"
   },
   "bugs": {
-    "url": "https://github.com/deadlyjack/acode/issues"
+    "url": "https://github.com/7HR4IZ3/acode/issues"
   },
-  "homepage": "https://github.com/deadlyjack/acode#readme",
+  "homepage": "https://github.com/7HR4IZ3/acode#readme",
   "devDependencies": {
     "@babel/cli": "^7.23.9",
     "@babel/core": "^7.23.9",
@@ -64,7 +64,7 @@
     "@babel/runtime": "^7.23.9",
     "@babel/runtime-corejs3": "^7.23.9",
     "@parrino/cordova-plugin-local-notifications": "^1.0.1",
-    "@red-mobile/nodejs-mobile-cordova": "^3.3.1",
+    "@red-mobile/nodejs-mobile-cordova": "https://github.com/7HR4IZ3/nodejs-mobile-cordova",
     "@types/ace": "^0.0.52",
     "@types/url-parse": "^1.4.11",
     "@xml-tools/ast": "^5.0.5",
@@ -129,7 +129,7 @@
     "admob-plus-cordova": "1.28.0",
     "autosize": "^6.0.1",
     "awesome-notifications": "^3.1.3",
-    "browser-bridge": "file:../Programming/bridge/browser-bridge",
+    "browser-bridge": "https://github.com/7HR4IZ3/browser-bridge",
     "cordova": "12.0.0",
     "core-js": "^3.35.1",
     "crypto-js": "^4.2.0",
@@ -140,7 +140,7 @@
     "filesize": "^10.1.0",
     "html-tag-js": "^1.4.3",
     "js-base64": "^3.7.6",
-    "js-bridge": "file:../Programming/bridge/browser-bridge",
+    "js-bridge": "https://github.com/7HR4IZ3/browser-bridge",
     "jszip": "^3.10.1",
     "lossless-json": "^4.0.1",
     "markdown-it": "^14.1.0",

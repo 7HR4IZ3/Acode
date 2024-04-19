@@ -18,7 +18,7 @@ fi
 
 if [ -z "$app" ]
 then
-app="paid"
+app="node"
 fi
 
 if [ "$mode" = "p" ] || [ "$mode" = "prod" ]
@@ -34,6 +34,8 @@ script1="node ./utils/config.js $mode $app"
 script2="webpack --progress --mode $webpackmode "
 script3="node ./utils/loadStyles.js"
 script4="cordova build $platform $cordovamode -- --jvmargs='-Xmx1536M --add-exports=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED'"
+
+script5="node ./utils/rename.js $mode $app"
 eval "
 echo \"${RED}$script1${NC}\";
 $script1;
@@ -42,5 +44,12 @@ $script2&&
 echo \"${RED}$script3${NC}\";
 $script3;
 echo \"${RED}$script4${NC}\";
-$script4
-"
+$script4;
+for f in *; do
+  echo \"File -> $f\"
+done
+echo \"${RED}$script5${NC}\";
+$script5
+for f in *; do
+  echo \"File -> $f\"
+done
