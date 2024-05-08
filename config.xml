@@ -78,6 +78,6 @@
     <hook src="hooks/modify-java-files.js" type="before_prepare" />
     <hook src="hooks/post-process.js" type="after_prepare" />
   </platform>
-  <allow-navigation href="http://localhost:8080" sessionid="8c75aa3c" />
-  <allow-navigation href="http://localhost:8100" sessionid="8c75aa3b" />
+  <allow-navigation href="http://**/*" sessionid="8c75aa3c" />
+  <!--<allow-navigation href="http://localhost:8100" sessionid="8c75aa3b" />-->
 </widget>
