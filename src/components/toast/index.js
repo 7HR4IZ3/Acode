@@ -37,7 +37,7 @@ export default function toast(message, duration = 0, bgColor, color) {
         if (typeof duration === 'number') {
           setTimeout(() => {
             this.hide();
-          }, duration || 3000);
+          }, duration || 1500);
         }
       },
     },

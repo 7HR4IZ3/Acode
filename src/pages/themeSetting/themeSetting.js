@@ -19,7 +19,7 @@ export default function () {
   const editor = ace.edit($themePreview);
 
   const session = ace.createEditSession('');
-  const currentSession = editorManager.activeFile.session;
+  const currentSession = editorManager.activeFile?.session || session;
 
   session.setMode(currentSession.getMode());
   session.setValue(currentSession.getValue());

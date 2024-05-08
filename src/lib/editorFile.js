@@ -193,13 +193,25 @@ export default class EditorFile extends EditorView {
       this.editable = editable;
     }
 
-    this.editorManager.emit('new-file', this);
+    if (this.id !== constants.DEFAULT_FILE_SESSION) {
+      this.editorManager.emit('new-file', this);
+    }
+
     this.session = ace.createEditSession(options?.text || '');
 
     this.setMode();
     this.#setupSession();
 
-    if (options?.render ?? true) this.render();
+    if (options?.render ?? true) {
+      this.render();
+    } else {
+      this.tab.remove();
+      
+      const { views } = this.editorManager;
+      this.editorManager.views = views.filter(
+        view => (view !== this)
+      );
+    }
   }
 
   /**

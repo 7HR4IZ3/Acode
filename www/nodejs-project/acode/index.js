@@ -52,7 +52,9 @@ process.stderr.on("data", data =>
   channel.post("process:stderr", data.toString())
 );
 
-process.on("warning", data => channel.post("process:warning", data));
+process.on("warning", data =>
+  channel.post("process:warning", data)
+);
 
 npm.load().then(() => {
   channel.post("npm:loaded", {});
@@ -133,13 +135,15 @@ npmChannel.on("install", (messageID, { global, dev, packages }) => {
 const bridgeChannel = createChannel("acode-bridge");
 const transporter = new BridgeTransporter(bridgeChannel);
 const client = new BaseBridgeClient({
-  transporter, context: { npm, require, global },
-  // proxy: ChainProxy, connection: ChainConnection
+  transporter, context: {
+    npm, require, global
+  }
 });
 
 const window = client.start();
 const { encoder, decoder } = window[getClass];
-bridgeChannel.setStringify(payload => stringify(payload, encoder));
+
 bridgeChannel.setParse(data => parse(data, decoder));
+bridgeChannel.setStringify(payload => stringify(payload, encoder));
 
 channel.post("server:ready", {});

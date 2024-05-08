@@ -1173,9 +1173,7 @@ export class AcodeLanguageServerPlugin {
   }
 
   #setupFooter() {
-    let footer = document.querySelector("#root footer");
-
-    this.$footer = footer.appendChild(
+    this.$footer = (
       tag("div", {
         className: "button-container",
         style: {
@@ -1191,6 +1189,11 @@ export class AcodeLanguageServerPlugin {
         ]
       })
     );
+
+    if (!!!this.settings.showFooter) {
+      let footer = document.querySelector("#root footer");
+      footer.appendChild(this.$footer)
+    }
   }
 
   #setupSidebar() {
@@ -1778,6 +1781,7 @@ export class AcodeLanguageServerPlugin {
       replaceCompleters: true,
       codelens: true,
       breadcrumbs: true,
+      showFooter: true,
       reconnectDelay: 1,
       closeTimeout: 60 * 3,
       breadcrumbTimeout: 1000,
@@ -1825,6 +1829,12 @@ export class AcodeLanguageServerPlugin {
           value: this.getDefaultValue(this.settings.url),
           prompt: "Server URL",
           promptType: "text"
+        },
+        {
+          key: "showFooter",
+          text: "Show Footer",
+          checkbox: this.getDefaultValue(this.settings.showFooter),
+          info: "Show footer for language server info"
         },
         {
           key: "hover",
@@ -1883,6 +1893,14 @@ export class AcodeLanguageServerPlugin {
                   ...editorManager.editor.completers
                 ];
               }
+            }
+            break;
+          case "showFooter":
+            if (value) {
+              let footer = document.querySelector("#root footer");
+              footer.appendChild(this.$footer)
+            } else {
+              this.$footer.remove();
             }
             break;
           default:

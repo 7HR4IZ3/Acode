@@ -40,7 +40,7 @@ export default class EditorView {
 
   constructor(name, options, editorManager) {
     this.#name = name;
-    this.#options = options;
+    this.#options = (options || {});
     this.#editorManager =
       editorManager || window.editorManager;
     this.#content = options?.content || (
@@ -116,6 +116,17 @@ export default class EditorView {
   set [name](value) {
     this.#name = value;
   }
+  
+  get info() {
+    return this.#options.info;
+  }
+  
+  set info(value) {
+    this.#options.info = value;
+    if (this.#editorManager.activeView === this) {
+      this.#editorManager.header.subText = value || "";
+    }
+  }
 
   get tab() {
     return this.#tab;
@@ -131,6 +142,12 @@ export default class EditorView {
 
   set [content](element) {
     if (!element) return;
+    if (!element instanceof Element)
+      throw new Error("EditorView content must be a Node");
+
+    if (this.#content !== element) {
+      this.#content.replaceWith(element);
+    }
     this.#content = element;
   }
 
@@ -159,6 +176,13 @@ export default class EditorView {
    */
   get name() {
     return this.#name;
+  }
+
+  set name(name) {
+    this.#name = name;
+    if (this.#editorManager.activeView === this) {
+      this.#editorManager.header.text = this.name;
+    }
   }
   
   get editorManager() {
@@ -202,7 +226,7 @@ export default class EditorView {
     this.#editorManager.activeFile = this;
 
     this.#editorManager.header.text = this.name;
-    this.#editorManager.header.subText = this.#options?.info || "";
+    this.#editorManager.header.subText = this.info || "";
 
     this.#tab.classList.add('active');
     this.#tab.scrollIntoView();
@@ -243,7 +267,7 @@ export default class EditorView {
       'update:openFileListPos',
       this.#onFilePosChange
     );
-    this.content?.remove();
+    // this.content?.remove();
     this.#tab?.remove();
     this.#tab = null;
   }

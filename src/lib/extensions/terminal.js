@@ -805,8 +805,7 @@ export class PtyHostBackend extends TerminalBackend {
           "\r\n" +
             color(
               "[Connection closed - Press enter to exit]",
-              "white",
-              "on_red"
+              "white", "on_red"
             ) +
             "\r\n"
         );
@@ -865,11 +864,6 @@ export class WebSocketBackend extends TerminalBackend {
     this.socket.onmessage = onmessage || this.onSocketMessage();
 
     this.socket.onopen = () => {
-      // if (this.terminal) {
-      //   this.terminal.term.loadAddon(
-      //     new AttachAddon.AttachAddon(this.socket)
-      //   );
-      // }
       for (let item of this.#sendQ) {
         this.socket.send(item);
       }
@@ -883,8 +877,7 @@ export class WebSocketBackend extends TerminalBackend {
           "\r\n" +
             color(
               "[Connection to server closed - Press enter to exit]",
-              "white",
-              "on_red"
+              "white", "on_red"
             ) +
             "\r\n"
         );
@@ -905,26 +898,6 @@ export class WebSocketBackend extends TerminalBackend {
       if (data && typeof data == "string") {
         this.onmessage?.bind(this)(data);
         return this.terminal?.saveTerminals();
-
-        //   if (!this.$recvSize) {
-        //     let [size, text] = data.split("\r\n\r\n");
-        //     this.$recvSize = Number(size);
-        //     this.$chunks = this.$chunks + text;
-        //   } else {
-        //     this.$chunks = this.$chunks + data;
-        //   }
-
-        //   console.log(this.$chunks)
-        //   console.log(this.$recvSize, this.$chunks.length)
-
-        //   if (this.$chunks.length >= this.$recvSize) {
-        //     this.onmessage?.bind(this)(this.$chunks);
-        //     this.terminal?.saveTerminals();
-
-        //     this.$recvSize = null;
-        //     this.$chunks = "";
-        //   }
-        // }
       }
     };
   }
@@ -939,15 +912,7 @@ export class WebSocketBackend extends TerminalBackend {
 
   setup(terminal) {
     this.terminal = terminal;
-    if (this.socket?.readyState == 1) {
-      // terminal.term.loadAddon(new AttachAddon.AttachAddon(this.socket));
-    }
-
-    // terminal.addTermOption("Clear Terminal", () => {
-    //   if (this.socket.readyState == 1) {
-    //     this.send("clear\r");
-    //   }
-    // });
+    if (this.socket?.readyState == 1) {}
 
     terminal.addTermOption(["Reconnect Server", "refresh"], () => {
       if (this.socket.readyState == 3) {
@@ -1018,8 +983,7 @@ export class TermuxBackend extends WebSocketBackend {
           this.host = host;
           return (
             host.replace("http", "ws") +
-            "terminal/" +
-            this.termId +
+            "terminal/" + this.termId +
             (cmd ? "?cmd=" + cmd : "")
           );
         },
@@ -1032,28 +996,20 @@ export class TermuxBackend extends WebSocketBackend {
   async resize({ rows, cols }) {
     try {
       await fetch(this.host + "resize/" + this.termId, {
-        method: "POST",
+        method: "POST", mode: "no-cors",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          rows,
-          cols
-        }),
-        mode: "no-cors"
+        body: JSON.stringify({ rows, cols })
       });
-    } catch {
-      // console.log(e);
-    }
+    } catch {}
   }
 
   static fromState(state, cls) {
     return WebSocketBackend.fromState(state, TermuxBackend);
   }
 
-  static get alias() {
-    return "termux";
-  }
+  static get alias() { return "termux" }
 }
 
 export class AcodeXBackend extends WebSocketBackend {

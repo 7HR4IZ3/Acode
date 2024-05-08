@@ -32,6 +32,7 @@ async function EditorManager($header, $body, $isMainEditor = false) {
   /**
    * @type {Collapsible & HTMLElement}
    */
+  let activeFile;
   let $openFileList;
   let TIMEOUT_VALUE = 500;
   let preventScrollbarV = false;
@@ -39,6 +40,7 @@ async function EditorManager($header, $body, $isMainEditor = false) {
   let scrollBarVisibilityCount = 0;
   let timeoutQuicktoolsToggler;
   let timeoutHeaderToggler;
+  let destroyed = false;
   let isScrolling = false;
   let lastScrollTop = 0;
   let lastScrollLeft = 0;
@@ -82,21 +84,35 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     views: [],
     onupdate: () => {},
     editorContainer,
-    activeFile: null,
+
     addFile,
     editor,
     getFile,
     addView,
     getView,
     switchView,
-    switchFile,
     hasUnsavedFiles,
     getEditorHeight,
     getEditorWidth,
     header: $header,
     isMain: $isMainEditor,
     container: $container,
+
     switchTo: () => switchManager(),
+    
+    get isDestroyed() {
+      return destroyed;
+    },
+
+    get activeFile() {
+      if (activeFile) return activeFile;
+      return (activeFile = new EditorFile(
+        null, {render: false}, manager
+      ));
+    },
+    set activeFile(value) {
+      activeFile = value;
+    },
     get files() {
       return manager.views.filter(view => view instanceof EditorFile);
     },
@@ -148,9 +164,10 @@ async function EditorManager($header, $body, $isMainEditor = false) {
       }
     },
     destroy() {
+      // console.log(manager, $isMainEditor);
       if ($isMainEditor) return;
 
-      window.EDITOR_MANAGERS = window.EDITOR_MANAGERS.filter(
+      window.EDITOR_MANAGERS = EDITOR_MANAGERS.filter(
         item => item !== manager
       );
 
@@ -159,12 +176,15 @@ async function EditorManager($header, $body, $isMainEditor = false) {
 
       editor.destroy();
 
+      destroyed = true;
+
       $openFileList.remove();
       $container.remove();
       $body.remove();
 
-      window.editorManager = window.EDITOR_MANAGERS[0];
-      window.editorManager.switchTo();
+      if (editorManager === manager) {
+        window.EDITOR_MANAGERS[0].switchTo();
+      }
     }
   };
   problemButton = SideButton({
@@ -301,10 +321,10 @@ async function EditorManager($header, $body, $isMainEditor = false) {
 
   function switchManager() {
     // Store previous editorManager in case of destroying current.
+    if (manager.isDestroyed) return;
+
     if (editorManager !== manager) {
-      window.previousEditorManager = window.editorManager;
       window.editorManager = manager;
-      window.editorManager.switchTo();
       EditorManager.emit("switch", manager);
     }
   }
@@ -313,8 +333,10 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     const Emmet = ace.require("ace/ext/emmet");
     const textInput = editor.textInput.getElement();
     const settings = appSettings.value;
-    const { leftMargin, textWrap, colorPreview, fontSize, lineHeight } =
-      appSettings.value;
+    const {
+      leftMargin, textWrap,
+      colorPreview, fontSize, lineHeight
+    } = appSettings.value;
     const scrollMarginTop = 0;
     const scrollMarginLeft = 0;
     const scrollMarginRight = textWrap ? 0 : leftMargin;
@@ -634,9 +656,9 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     });
   }
 
-  function switchFile(id) {
+  function switchView(id) {
     const { activeFile } = manager;
-    const { id: activeFileId } = activeFile || {};
+    const { id: activeFileId } = activeFile;
     if (activeFileId === id) return;
 
     const file = manager.getView(id);
@@ -645,11 +667,16 @@ async function EditorManager($header, $body, $isMainEditor = false) {
 
     if (!content) throw new Error("View has no content");
 
-    if (!activeContent)
+    if (!activeContent) {
       manager.container.appendChild(content);
-
-    if (activeContent && content !== activeContent) {
+    } else if (activeContent && content !== activeContent) {
       activeContent.replaceWith(content);
+    } else {
+      manager.container.appendChild(content);
+    }
+
+    if (manager.container.children.length === 0) {
+      manager.container.appendChild(content);
     }
 
     $hScrollbar.remove();
@@ -660,17 +687,8 @@ async function EditorManager($header, $body, $isMainEditor = false) {
       setHScrollValue();
     }
 
-    if (file instanceof EditorFile) {
-      manager.onupdate("switch-file");
-      events.emit("switch-file", file);
-    } else {
-      manager.onupdate("switch-view");
-      events.emit("switch-view", file);
-    }
-  }
-
-  function switchView(id) {
-    switchFile(id);
+    manager.onupdate("switch-view");
+    events.emit("switch-view", file);
   }
 
   function initFileTabContainer() {
@@ -725,7 +743,10 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     }
 
     $openFileList.manager = manager;
-    $openFileList.addEventListener("click", () => switchManager());
+    $openFileList.addEventListener(
+      "click", () => switchManager()
+    );
+
     root.setAttribute("open-file-list-pos", openFileListPos);
     manager.emit("int-open-file-list", openFileListPos);
   }
