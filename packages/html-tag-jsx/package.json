@@ -1,0 +1,12 @@
+{
+  "name": "html-tag-jsx",
+  "version": "1.0.0",
+  "description": "JSX import source for html-tag-js",
+  "main": "index.js",
+  "repository": "https://github.com/7HR4IZ3/html-tag-jsx",
+  "author": "Thraize",
+  "license": "MIT",
+  "dependencies": {
+    "html-tag-js": "^1.5.1"
+  }
+}

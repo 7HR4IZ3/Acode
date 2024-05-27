@@ -1,0 +1,48 @@
+name: Node.js
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  NODE_VERSION: "18"
+  JAVA_VERSION: "11"
+  JAVA_DISTRIBUTION: "microsoft"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{env.NODE_VERSION}}
+      - name: npm test
+        run: |
+          npm ci
+          npm test --if-present
+        env:
+          CI: true
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{env.NODE_VERSION}}
+      - name: set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{env.JAVA_DISTRIBUTION}}
+          java-version: ${{env.JAVA_VERSION}}
+      - name: npm run build
+        run: |
+          npm ci
+          npm run build --if-present
+        env:
+          CI: true

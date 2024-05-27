@@ -1190,7 +1190,7 @@ export class AcodeLanguageServerPlugin {
       })
     );
 
-    if (!!!this.settings.showFooter) {
+    if (!!this.settings.showFooter) {
       let footer = document.querySelector("#root footer");
       footer.appendChild(this.$footer)
     }
@@ -1781,7 +1781,7 @@ export class AcodeLanguageServerPlugin {
       replaceCompleters: true,
       codelens: true,
       breadcrumbs: true,
-      showFooter: true,
+      showFooter: false,
       reconnectDelay: 1,
       closeTimeout: 60 * 3,
       breadcrumbTimeout: 1000,

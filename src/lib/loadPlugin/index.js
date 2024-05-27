@@ -15,10 +15,11 @@ function main(pluginID, plugin, justInstalled) {
     }
 
     nodejs.channel.once(`plugin:${pluginID}:status`, onLoadPlugin);
-    nodejs.channel.post(
-      "acode:loadPlugin",
-      { pluginID, plugin, justInstalled }
-    );
+    nodejs.channel.post("acode:loadPlugin", {pluginID, plugin, justInstalled});
+
+    if (!plugin.main) { throw new Error("No main file for plugin") }
+
+    const mainURL = Url.join(PLUGIN_DIR, pluginID, plugin.main);
   });
 }
 
@@ -45,7 +46,10 @@ export default async function loadPlugin(pluginId, justInstalled = false) {
   // NodeJS plugin loading.
   try {
     const packageJSON = await helpers.parseJSON(
-      await fs.readFile(Url.join(PLUGIN_DIR, pluginId, "package.json"))
+      await fs.readFile(
+        Url.join(PLUGIN_DIR, pluginId, "package.json"),
+        { encoding: "utf-8" }
+      )
     );
     if (packageJSON) {
       await main(pluginId, packageJSON, justInstalled);

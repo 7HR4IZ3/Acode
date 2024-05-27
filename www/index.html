@@ -10,6 +10,7 @@
 
     <script>
       const debugPort = localStorage.acodeDebugPort;
+      const debugHost = localStorage.acodeDebugHost;
       const noRedirect =
         location.search.indexOf("acodeDebugNoRedirect") !== -1;
 
@@ -17,7 +18,11 @@
         debugPort && !noRedirect &&
         location.port !== String(debugPort)
       ) {
-        location.assign(`http://localhost:${debugPort}`);
+        if (debugHost) {
+          location.assign(`http://${debugHost}:${debugPort}`);
+        } else {
+          location.assign(`http://localhost:${debugPort}`);
+        }
       } else if (debugPort && location.port === String(debugPort)) {
         if (localStorage.acodeDebugNoRedirect === "true") {
           location.assign("http://localhost?acodeDebugNoRedirect");

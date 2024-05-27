@@ -500,8 +500,7 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     const contentTop = container.getBoundingClientRect().top;
     const contentBottom = contentTop + container.clientHeight;
     const cursorTop = editor.renderer.textToScreenCoordinates(
-      cursorPos.row,
-      cursorPos.column
+      cursorPos.row, cursorPos.column
     ).pageY;
     const cursorBottom = cursorTop + teardropSize + 10;
     return cursorTop >= contentTop && cursorBottom <= contentBottom;

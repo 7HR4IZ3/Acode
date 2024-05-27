@@ -1,0 +1,23 @@
+{
+  "json": {
+  },
+  "markdown": {
+  },
+  "biome": {
+    "indentStyle": "space",
+    "indentSize": 2,
+    "lineEnding": "lf"
+  },
+  "excludes": [
+    "**/*-lock.json",
+    "**/node_modules",
+    "testapp/temp-module-copy",
+    ".devcontainer",
+    "libs"
+  ],
+  "plugins": [
+    "https://plugins.dprint.dev/json-0.19.2.wasm",
+    "https://plugins.dprint.dev/markdown-0.16.4.wasm",
+    "https://plugins.dprint.dev/biome-0.4.3.wasm"
+  ]
+}

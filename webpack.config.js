@@ -7,24 +7,7 @@ const ANDROID_WWW = path.resolve(
   __dirname,
   "platforms/android/app/src/main/assets/www"
 );
-const WWW = path.resolve(__dirname, 'www');
-
-// let timeout, isExecuting;
-// function buildAndroidApp() {
-//   if (timeout) clearTimeout(timeout);
-//   timeout = setTimeout(() => {
-//     execSync(
-//       `cordova prepare`, { cwd: path.resolve(__dirname) },
-//       (err, stdout, stderr) => {
-//         if (err) {
-//           console.error(err);
-//           return;
-//         }
-//         console.log(stdout, stderr);
-//       }
-//     );
-//   }, 1000);
-// }
+const WWW = path.resolve(__dirname, "www");
 
 module.exports = (env, options) => {
   const { mode = "development" } = options;
@@ -42,23 +25,23 @@ module.exports = (env, options) => {
       use: [
         {
           loader: MiniCssExtractPlugin.loader,
-          options: {
-            publicPath: "../../"
-          }
+          options: { publicPath: "../../" }
         },
         {
           loader: "css-loader",
-          options: {
-            url: false
-          }
+          options: { url: false }
         },
         "postcss-loader",
         "sass-loader"
       ]
+    },
+    {
+      test: /\.tsx?$/,
+      use: 'ts-loader', 
+      exclude: /node_modules/
     }
   ];
 
-  // if (mode === 'production') {
   rules.push({
     test: /\.m?js$/,
     use: [
@@ -71,55 +54,46 @@ module.exports = (env, options) => {
       }
     ]
   });
-  // }
 
-  clearOutputDir();
+
+  if (mode !== "development") {
+    clearOutputDir();
+  }
 
   const main = {
     mode,
+    // entry: {
+    //   main: "./src/lib/main.js",
+    //   console: "./src/lib/console.js",
+    //   searchInFilesWorker:
+    //     "./src/components/sidebar-apps/searchInFiles/worker.js"
+    // },
     entry: {
       main: "./src/lib/main.js",
       console: "./src/lib/console.js",
       searchInFilesWorker: "./src/sidebarApps/searchInFiles/worker.js"
     },
     output: {
-      path: path.resolve(WWW, "js/build/"),
+      publicPath: "./js/build/",
       filename: "[name].build.js",
       chunkFilename: "[name].build.js",
-      publicPath: "./js/build/"
+      path: path.resolve(WWW, "js/build/")
     },
     module: {
       rules
     },
     resolve: {
       fallback: {
-        path: require.resolve("path-browserify"),
-        crypto: false
+        crypto: false,
+        path: require.resolve("path-browserify")
       },
       modules: ["node_modules", "src"]
     },
     plugins: [
       new MiniCssExtractPlugin({
         filename: "../../css/build/[name].css"
-      }),
-      // {
-      //   apply: compiler => {
-      //     compiler.hooks.afterDone.tap("prepare", () => {
-      //       // run cordova prepare
-      //       buildAndroidApp();
-      //   }
-      // }
-    ],
-    // devServer: {
-    //   static: {
-    //     directory: ANDROID_WWW,
-    //     watch: true
-    //   },
-    //   hot: false,
-    //   liveReload: true,
-    //   compress: true,
-    //   port: 9000,
-    // }
+      })
+    ]
   };
 
   return [main];

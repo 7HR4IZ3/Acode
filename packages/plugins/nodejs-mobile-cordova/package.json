@@ -1,0 +1,65 @@
+{
+  "name": "@red-mobile/nodejs-mobile-cordova",
+  "version": "3.4.0",
+  "description": "Node.js for Mobile Apps Cordova plugin",
+  "cordova": {
+    "id": "@red-mobile/nodejs-mobile-cordova",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+  },
+  "scripts": {
+    "build:node": "node zipLibNode.js",
+    "fmt": "npx dprint fmt",
+    "check": "npx dprint check",
+    "test": "run-s check",
+    "build:clean": "rimraf testapp/node_modules testapp/plugins testapp/platforms testapp/temp-module-copy",
+    "build:install": "cd testapp && npm i",
+    "build:android": "cd testapp && npx cordova platform add android && npx cordova prepare android && npx cordova build",
+    "build": "run-s build:clean build:install build:android"
+  },
+  "keywords": [
+    "cordova",
+    "mobile",
+    "nodejs",
+    "node.js",
+    "nodejs-mobile",
+    "ecosystem:cordova",
+    "cordova-android",
+    "cordova-ios"
+  ],
+  "author": "janeasystems",
+  "license": "MIT",
+  "dependencies": {
+    "node-gyp-build-mobile": "4.6.0-3",
+    "nodejs-mobile-gyp": "0.4.0",
+    "tar.gz2": "1.0.0",
+    "xcode": "2.1.0"
+  },
+  "homepage": "https://github.com/okhiroyuki/nodejs-mobile-cordova",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/okhiroyuki/nodejs-mobile-cordova"
+  },
+  "bugs": {
+    "url": "https://github.com/okhiroyuki/nodejs-mobile/issues"
+  },
+  "engines": {
+    "cordovaDependencies": {
+      "2.0.0": {
+        "cordova-android": ">=12.0.0"
+      },
+      "3.0.0": {
+        "cordova-android": ">=12.0.0",
+        "cordova-ios": ">=4.0.0"
+      }
+    }
+  },
+  "devDependencies": {
+    "cordova": "12.0.0",
+    "dprint": "0.45.1",
+    "npm-run-all2": "6.1.2",
+    "rimraf": "5.0.5"
+  }
+}

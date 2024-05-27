@@ -168,7 +168,7 @@ async function onDeviceReady() {
     system.requestPermission("com.termux.permission.RUN_COMMAND");
     system.requestPermission("android.permission.READ_EXTERNAL_STORAGE");
     system.requestPermission("android.permission.WRITE_EXTERNAL_STORAGE");
-    system.requestPermission("android.permission.MANAGE_EXTERNAL_STORAGE");
+    // system.requestPermission("android.permission.MANAGE_EXTERNAL_STORAGE");
 
     const { versionCode } = BuildInfo;
 
