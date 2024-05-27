@@ -21,8 +21,8 @@ function executeCommands(commands, index = 0) {
       console.error(error);
       process.exit(1);
     } else {
-      console.log(stdout);
-      console.error(stderr);
+      stdout && console.log(stdout);
+      stderr && console.error(stderr);
       executeCommands(commands, index + 1);
     }
   });
