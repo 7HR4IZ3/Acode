@@ -62,7 +62,7 @@ function setupCordovaPlugins() {
 
 function addLocalPlugins() {
   const PLATFORM_FILES = ['.DS_Store'];
-  const PLUGINS_DIR = path.resolve(__dirname, '../../packages/plugins');
+  const PLUGINS_DIR = path.resolve(__dirname, '../packages/plugins');
 
   fs.readdir(PLUGINS_DIR, (err, files) => {
     if (err) {
