@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'oracle' # See 'Supported distributions' for available options
-          java-version: '16' # only 11 works for this project 
+          java-version: '17' # only 11 works for this project 
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
