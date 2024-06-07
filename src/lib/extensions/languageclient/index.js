@@ -1083,7 +1083,11 @@ export class AcodeLanguageServerPlugin {
           clearTimeout(timeout);
         }
         timeout = setTimeout(async () => {
-          await this.$buildBreadcrumbs();
+          if (editorManager.activeView instanceof EditorFile) {
+            await this.$buildBreadcrumbs();
+          } else {
+            this.$breadcrumbsNode.style.display = "none";
+          }
           timeout = null;
         }, 500);
       };
@@ -1092,9 +1096,14 @@ export class AcodeLanguageServerPlugin {
       EditorManager.on("create", ({editor}) => {
         editor.on("change", this.$func);
       });
-      editorManager.on("switch-file", () =>
-        setTimeout(this.$buildBreadcrumbs.bind(this), 0)
-      );
+
+      editorManager.on("switch-view", () => {
+        if (editorManager.activeView instanceof EditorFile) {
+          setTimeout(this.$buildBreadcrumbs.bind(this), 0)
+        } else {
+          this.$breadcrumbsNode.style.display = "none";
+        }
+      });
       this.$func();
     }
   }
@@ -1486,8 +1495,7 @@ export class AcodeLanguageServerPlugin {
 
     let currentName = editorManager.editor.getSelectedText();
     let newName = await (window.acode?.prompt || prompt)(
-      "New name",
-      currentName
+      "New name", currentName
     );
 
     services.map(service => {

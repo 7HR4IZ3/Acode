@@ -57,15 +57,22 @@ import {
   BridgeTransporter
 } from "browser-bridge";
 
+export const constants = Symbol("constants");
+export const getPlugin = Symbol("getPlugin");
+
 export default class Acode {
   #npm = null;
   #nodejs = null;
   #connections = null;
   #nodejsInitialized = false;
+  
+  select = select;
 
   #modules = {};
-  #pluginsInit = {};
-  #pluginUnmount = {};
+  #plugins = {};
+  
+  #constants = {};
+
   #formatter = [
     {
       id: "default",
@@ -237,6 +244,10 @@ export default class Acode {
     await initializeExtensions();
   }
 
+  [getPlugin](pluginID) {
+    return this.#plugins[pluginID];
+  }
+
   get nodejs() {
     // if (!this.#nodejsInitialized)
     //   throw new Error("NodeJS not initialized");
@@ -261,7 +272,16 @@ export default class Acode {
       }
     }
   }
+
   get connections() { return this.#connections }
+
+  get constants() {
+    return this.#constants;
+  }
+
+  set [constants](value) {
+    this.#constants = value;
+  }
 
   execute(code) {
     this.#nodejs.channel.post("acode:exec", code);
@@ -273,6 +293,10 @@ export default class Acode {
    * @param {Object|function} module
    */
   define(name, module) {
+    if (this.#modules[name.toLowerCase()]) {
+      throw new Error("Module already exists");
+    }
+
     this.#modules[name.toLowerCase()] = module;
     window.define(
       `@acode/${name.toLowerCase()}`,
@@ -310,18 +334,34 @@ export default class Acode {
    * @param {{list: import('components/settingsPage').ListItem[], cb: (key: string, value: string)=>void}} settings
    */
   setPluginInit(id, initFunction, settings) {
-    this.#pluginsInit[id] = initFunction;
+    if (this.#plugins[id]) {
+      const message =
+        `Plugin with id: "${id}" already registered`;
+      throw new Error(message);
+    }
+
+    this.#plugins[id] = {
+      init: initFunction,
+      settings, legacy: true
+    };
 
     if (!settings) return;
-    appSettings.uiSettings[`plugin-${id}`] = settingsPage(
-      id,
-      settings.list,
-      settings.cb
+
+    const settingPage = settingsPage(
+      id, settings.list, settings.cb
     );
+    appSettings.uiSettings[`plugin-${id}`] =
+      this.#plugins[id]["settingPage"] = settingPage;
   }
 
   setPluginUnmount(id, unmountFunction) {
-    this.#pluginUnmount[id] = unmountFunction;
+    if (!this.#plugins[id]) {
+      const message =
+        `Plugin with id: "${id}" dosen't exist`;
+      throw new Error(message);
+    }
+
+    this.#plugins[id]["unmount"] = unmountFunction;
   }
 
   /**
@@ -331,15 +371,17 @@ export default class Acode {
    * @param {HTMLElement} $page
    */
   async initPlugin(id, baseUrl, $page, options) {
-    if (id in this.#pluginsInit) {
-      await this.#pluginsInit[id](baseUrl, $page, options);
+    if (id in this.#plugins) {
+      await this.#plugins[id]["init"](baseUrl, $page, options);
     }
   }
 
   unmountPlugin(id) {
-    if (id in this.#pluginUnmount) {
-      this.#pluginUnmount[id]();
-      fsOperation(Url.join(CACHE_STORAGE, id)).delete();
+    if (id in this.#plugins) {
+      this.#plugins[id]["unmount"]?.();
+      fsOperation(
+        Url.join(window.CACHE_STORAGE, id)
+      ).delete();
     }
 
     delete appSettings.uiSettings[`plugin-${id}`];
@@ -393,10 +435,6 @@ export default class Acode {
     }
   }
 
-  fsOperation(file) {
-    return fsOperation(file);
-  }
-
   newEditorFile(filename, options, manager) {
     new EditorFile(filename, options, manager);
   }
@@ -431,10 +469,6 @@ export default class Acode {
     return loader.create(title, message, cancel);
   }
 
-  joinUrl(...args) {
-    return Url.join(...args);
-  }
-
   addIcon(className, src) {
     let style = document.head.get(`style[icon="${className}"]`);
     if (!style) {
@@ -457,23 +491,16 @@ export default class Acode {
     return confirmation;
   }
 
-  async select(title, options, config) {
-    const response = await select(title, options, config);
-    return response;
-  }
-
-  async multiPrompt(title, inputs, help) {
-    const values = await multiPrompt(title, inputs, help);
-    return values;
-  }
-
-  async fileBrowser(mode, info, openLast) {
-    const res = await FileBrowser(mode, info, openLast);
-    return res;
-  }
-
   async toInternalUrl(url) {
     url = await helpers.toInternalUri(url);
     return url;
+  }
+  
+  register(pluginID, initFunction) {
+    this.#plugins[pluginID] = {
+      legacy: false,
+      context: null,
+      init: initFunction
+    }
   }
 }

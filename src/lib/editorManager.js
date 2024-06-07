@@ -33,6 +33,7 @@ async function EditorManager($header, $body, $isMainEditor = false) {
    * @type {Collapsible & HTMLElement}
    */
   let activeFile;
+  let activeView;
   let $openFileList;
   let TIMEOUT_VALUE = 500;
   let preventScrollbarV = false;
@@ -106,12 +107,24 @@ async function EditorManager($header, $body, $isMainEditor = false) {
 
     get activeFile() {
       if (activeFile) return activeFile;
+      if (activeView && activeView instanceof EditorFile)
+        return activeView;
       return (activeFile = new EditorFile(
         null, {render: false}, manager
       ));
     },
     set activeFile(value) {
       activeFile = value;
+    },
+    get activeView() {
+      if (activeView) return activeView;
+      return null;
+    },
+    set activeView(value) {
+      activeView = value;
+      if (value instanceof EditorFile) {
+        activeFile = value;
+      }
     },
     get files() {
       return manager.views.filter(view => view instanceof EditorFile);
@@ -500,7 +513,8 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     const contentTop = container.getBoundingClientRect().top;
     const contentBottom = contentTop + container.clientHeight;
     const cursorTop = editor.renderer.textToScreenCoordinates(
-      cursorPos.row, cursorPos.column
+      cursorPos.row,
+      cursorPos.column
     ).pageY;
     const cursorBottom = cursorTop + teardropSize + 10;
     return cursorTop >= contentTop && cursorBottom <= contentBottom;
@@ -656,13 +670,16 @@ async function EditorManager($header, $body, $isMainEditor = false) {
   }
 
   function switchView(id) {
-    const { activeFile } = manager;
-    const { id: activeFileId } = activeFile;
-    if (activeFileId === id) return;
+    const { activeView } = manager;
+    
+    if (activeView) {
+      const { id: activeViewId } = activeView;
+      if (activeViewId === id) return;
+    }
 
-    const file = manager.getView(id);
-    const content = file.content;
-    const activeContent = activeFile?.content;
+    const view = manager.getView(id);
+    const content = view.content;
+    const activeContent = activeView?.content;
 
     if (!content) throw new Error("View has no content");
 
@@ -687,7 +704,7 @@ async function EditorManager($header, $body, $isMainEditor = false) {
     }
 
     manager.onupdate("switch-view");
-    events.emit("switch-view", file);
+    events.emit("switch-view", view);
   }
 
   function initFileTabContainer() {

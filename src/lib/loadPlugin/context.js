@@ -3,8 +3,11 @@ export default class PluginContext {
   #plugin;
   permissions = {};
 
-  constructor(plugin) {
-    this.#plugin = plugin;
+  constructor(pluginID, packageJSON) {
+    this.#plugin = {
+      id: pluginID,
+      json: packageJSON
+    };
   }
 
   hasPermission(alias) {}

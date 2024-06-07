@@ -1,18 +1,20 @@
-import "core-js/stable";
-import "html-tag-js/dist/polyfill";
+alert("Hii")
+
+import("core-js/stable");
+import("html-tag-js/dist/polyfill");
 
 import "styles/main.scss";
 import "styles/page.scss";
 import "styles/list.scss";
 import "styles/overrideAceStyle.scss";
 
-import "lib/polyfill";
-import "ace/supportedModes";
-import "components/WebComponents";
+import("lib/polyfill");
+import("ace/supportedModes");
+import("components/WebComponents");
 
 import Url from "utils/Url";
 import lang from "lib/lang";
-import Acode from "lib/acode";
+import Acode, { constants } from "lib/acode";
 import themes from "theme/list";
 import mustache from "mustache";
 import startAd from "lib/startAd";
@@ -164,6 +166,17 @@ async function onDeviceReady() {
     })();
     let acode = (window.acode = new Acode());
     window.EDITOR_MANAGERS = acode.editorManagers = new Array();
+
+    acode[constants] = {
+      app: window.app, root: window.root,
+      PLUGIN_DIR: window.PLUGIN_DIR,
+      DATA_STORAGE: window.DATA_STORAGE,
+      CACHE_STORAGE: window.CACHE_STORAGE,
+      IS_FREE_VERSION: window.IS_FREE_VERSION,
+      KEYBINDING_FILE: window.KEYBINDING_FILE,
+      ASSETS_DIRECTORY: window.ASSETS_DIRECTORY,
+      EDITOR_MANAGERS: window.EDITOR_MANAGERS
+    }
 
     system.requestPermission("com.termux.permission.RUN_COMMAND");
     system.requestPermission("android.permission.READ_EXTERNAL_STORAGE");

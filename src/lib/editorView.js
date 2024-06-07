@@ -216,14 +216,13 @@ export default class EditorView {
     if (activeView) {
       if (activeView.id === this.id) return;
       activeView.focusedBefore = activeView.focused;
-      activeView.remove();
     }
 
     switchView(this.id);
 
-    this.#editorManager.activeFile?.tab
+    this.#editorManager.activeView?.tab
       .classList.remove("active");
-    this.#editorManager.activeFile = this;
+    this.#editorManager.activeView = this;
 
     this.#editorManager.header.text = this.name;
     this.#editorManager.header.subText = this.info || "";
@@ -236,15 +235,13 @@ export default class EditorView {
     this.editorManager.views = this.editorManager.views.filter(
       (view) => view.id !== this.id
     );
-    const { views, activeFile } = this.editorManager;
-    if (activeFile.id === this.id) {
-      this.editorManager.activeFile = null;
-    }
+
+    const { views } = this.editorManager;
+
     this.destroy();
 
     if (!views.length) {
       Sidebar.hide();
-      this.editorManager.activeFile = null;
       if (this.editorManager.isMain) {
         acode.newEditorFile();
       } else {
@@ -254,7 +251,8 @@ export default class EditorView {
         return true;
       }
     } else {
-      views[views.length - 1].makeActive();
+      console.log(views.at(-1));
+      views.at(-1).makeActive();
     }
 
     this.editorManager.onupdate('remove-view');

@@ -19,7 +19,7 @@ import filesSettings from './filesSettings';
 import scrollSettings from './scrollSettings';
 import searchSettings from './searchSettings';
 
-const CUSTOM_SETTINGS = [];
+let CUSTOM_SETTINGS = [];
 
 export function addCustomSettings(setting, settingPage) {
   // TODO: Support other language using strings

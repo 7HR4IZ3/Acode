@@ -23,6 +23,6 @@
     "transpileOnly": true
   },
   "include": [
-    "./src/**/*.ts",
+    "./src/**/*.js"
   ]
 }

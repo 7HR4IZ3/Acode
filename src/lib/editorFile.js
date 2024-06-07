@@ -587,6 +587,8 @@ export default class EditorFile extends EditorView {
 
     editor.setReadOnly(!this.editable || !!this.loading);
 
+    this.editorManager.activeFile = this;
+
     if (this.focused) {
       editor.focus();
     } else {

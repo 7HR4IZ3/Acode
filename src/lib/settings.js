@@ -102,7 +102,7 @@ class Settings {
       linenumbers: true,
       formatOnSave: false,
       autoCorrect: true,
-      openFileListPos: this.OPEN_FILE_LIST_POS_HEADER,
+      openFileListPos: this.OPEN_FILE_LIST_POS_SIDEBAR,
       quickTools: this.#IS_TABLET ? 0 : 1,
       quickToolsTriggerMode: this.QUICKTOOLS_TRIGGER_MODE_TOUCH,
       editorFont: 'Roboto Mono',
