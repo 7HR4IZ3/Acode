@@ -9,3 +9,5 @@
 /platforms/android/release-signing.properties
 **/*/.DS_Store
 .DS_Store
+
+/build

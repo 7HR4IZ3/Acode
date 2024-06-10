@@ -142,7 +142,7 @@ export default class EditorView {
 
   set [content](element) {
     if (!element) return;
-    if (!element instanceof Element)
+    if (!(element instanceof Element))
       throw new Error("EditorView content must be a Node");
 
     if (this.#content !== element) {

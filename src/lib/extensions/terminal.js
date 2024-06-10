@@ -1502,7 +1502,7 @@ class AcodeTerminalPlugin {
   }
 
   async initialize() {
-    this.#stateFile = fs(CACHE_STORAGE, "acode.terminal.state");
+    this.#stateFile = window["f"] = fs(CACHE_STORAGE, "acode.terminal.state");
 
     if (!(await this.#stateFile.exists())) {
       await fs(CACHE_STORAGE).createFile("acode.terminal.state");
@@ -2049,6 +2049,7 @@ class AcodeTerminalPlugin {
 
   async loadTerminals() {
     let data = await this.#stateFile?.readFile("utf-8");
+    console.log(data)
     if (data) {
       for (let item of JSON.parse(data)) {
         let terminal = item.name;

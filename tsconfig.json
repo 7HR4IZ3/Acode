@@ -11,9 +11,8 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "baseUrl": "./src",
-    "paths": {
-
-    }
+    "jsx": "react-jsx",
+    "jsxImportSource": "html-tag-jsx"
   },
   "exclude": [
     "./dist/**/*",

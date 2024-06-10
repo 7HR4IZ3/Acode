@@ -66,7 +66,10 @@ export default class Acode {
   #connections = null;
   #nodejsInitialized = false;
   
+  alert = alert;
   select = select;
+  prompt = prompt;
+  confirm = confirm;
 
   #modules = {};
   #plugins = {};
@@ -461,10 +464,6 @@ export default class Acode {
     return options;
   }
 
-  alert(title, message, onhide) {
-    alert(title, message, onhide);
-  }
-
   loader(title, message, cancel) {
     return loader.create(title, message, cancel);
   }
@@ -479,16 +478,6 @@ export default class Acode {
       );
       document.head.appendChild(style);
     }
-  }
-
-  async prompt(message, defaultValue, type, options) {
-    const response = await prompt(message, defaultValue, type, options);
-    return response;
-  }
-
-  async confirm(title, message) {
-    const confirmation = await confirm(title, message);
-    return confirmation;
   }
 
   async toInternalUrl(url) {

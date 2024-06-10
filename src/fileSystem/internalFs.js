@@ -98,6 +98,7 @@ const internalFs = {
         (fileEntry) => {
           (async () => {
             const url = fileEntry.toInternalURL();
+            console.log(url);
             try {
               const data = await ajax({
                 url: url,

@@ -2724,7 +2724,7 @@ braces@^3.0.3, braces@~3.0.2:
   dependencies:
     fill-range "^7.1.1"
 
-"browser-bridge@file:packages/browser-bridge":
+browser-bridge@./packages/browser-bridge:
   version "1.0.0"
   dependencies:
     events "^3.3.0"
@@ -4487,10 +4487,15 @@ html-entities@^2.4.0:
   resolved "https://registry.yarnpkg.com/html-entities/-/html-entities-2.5.2.tgz#201a3cf95d3a15be7099521620d19dfb4f65359f"
   integrity sha512-K//PSRMQk4FZ78Kyau+mZurHn3FH0Vwr+H36eE0rPbeYkRRi9YxceYPhuN60UwWorxyKHhqoAJl2OFKa4BVtaA==
 
-html-tag-js@^1.4.3:
+html-tag-js@^1.4.3, html-tag-js@^1.5.1:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/html-tag-js/-/html-tag-js-1.5.1.tgz#a93fb26effca8b0d1a5d9bd47fed60373516a23d"
   integrity sha512-zfdneRcuNlnttWxkF0K8UdijOv2/ja3+RUTNBz7MvsdyYjrABe0HWtmN3oHtNPeypwWpDBTsVCBZSeWHequufw==
+
+html-tag-jsx@./packages/html-tag-jsx/:
+  version "1.0.0"
+  dependencies:
+    html-tag-js "^1.5.1"
 
 htmlhint@^1.1.4:
   version "1.1.4"
@@ -5012,7 +5017,7 @@ js-base64@^3.7.6:
   resolved "https://registry.yarnpkg.com/js-base64/-/js-base64-3.7.7.tgz#e51b84bf78fbf5702b9541e2cb7bfcb893b43e79"
   integrity sha512-7rCnleh0z2CkXhH67J8K1Ytz0b2Y+yxTPL+/KOJoa20hfnVQ/3/T6W/KflYI4bRHRagNeXeU2bkNGI3v1oS/lw==
 
-"js-bridge@file:packages/browser-bridge":
+js-bridge@./packages/browser-bridge:
   version "1.0.0"
   dependencies:
     events "^3.3.0"

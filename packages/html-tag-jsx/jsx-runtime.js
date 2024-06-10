@@ -3,11 +3,13 @@ const tag = require("html-tag-js");
 const Fragment = Symbol("jsx.fragment");
 
 function jsx(type, props, key) {
-  if (props.children) {
+  if (props.children !== undefined) {
     if (!Array.isArray(props.children)) {
       props.children = [props.children]
     }
   }
+
+  console.log(type, props)
 
   if (type === Fragment) {
     return tag("div", props);

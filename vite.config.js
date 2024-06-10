@@ -3,11 +3,11 @@ import { defineConfig } from "vite";
 import { resolve } from "path";
 
 export default defineConfig({
-  root: resolve("www"),
   esbuild: {
-    loader: "jsx",
+    loader: "jsx", jsxDev: false,
     include: /src\/.*\.jsx?$/,
-    exclude: []
+    exclude: [], jsx: "automatic",
+    jsxImportSource: "html-tag-jsx"
   },
   assetsInclude: ['**/*.hbs'],
   optimizeDeps: {
@@ -31,8 +31,8 @@ export default defineConfig({
     }
   },
   build: {
-    outDir: resolve("www", "js", "bundle"), // Output directory for production build
-    emptyOutDir: true, // Clear output directory before building (similar to clearOutputDir)
+    outDir: resolve("build"), // Output directory for production build
+    emptyOutDir: false, // Clear output directory before building (similar to clearOutputDir)
     // rollupOptions: {
     //   input: {
     //     index: resolve("www", "index.html"),
@@ -77,5 +77,17 @@ export default defineConfig({
   plugins: [], // No direct equivalent to MiniCssExtractPlugin in Vite, handled by CSS preprocessors
   server: {
     // Optional server configuration
-  }
+    port: 8080,
+    watch: {
+      ignored: [
+        '**/platforms/**', '**/build/**',
+        '**/node_modules/**', 'plugins'
+      ],
+    },
+    proxy: {
+      "__cdvfile_files-external__/*": "https://localhost",
+      "__cdvfile_assets__/*": "https://localhost",
+      "__cdvfile_temporary__/*": "https://localhost"
+    }
+  },
 });
